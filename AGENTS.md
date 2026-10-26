@@ -1,6 +1,6 @@
 # AGENTS — Aturan kerja untuk asisten AI di repo ini
 
-**Status:** v1.0, 26 Oktober 2026
+**Status:** v1.1, 26 Oktober 2026
 
 File ini dibaca oleh asisten AI (Claude, Codex, dan sejenisnya) sebelum menyentuh kode di repo ini. Isinya: apa proyek ini, bagaimana cara bekerja dengan pemiliknya, dan aturan yang tidak boleh dilanggar.
 
@@ -62,7 +62,7 @@ Pemilik baru belajar coding dan memakai macOS.
 - Setiap aksi tulis dibungkus `LockService.getScriptLock()`.
 - Baris dicari lewat `id`. Tanggal disimpan sebagai teks `YYYY-MM-DD`. Zona waktu proyek Asia/Jakarta.
 - Respons selalu `{ok:true, data}` atau `{ok:false, error:{code, message}}` dengan kode dari ARCHITECTURE bagian 5.
-- Fungsi yang hanya boleh dijalankan pemilik dari editor (mis. `setupSheet()`, `createOwner()`, `resetOwnerPin()`) diberi akhiran `_` atau diletakkan di bagian "Fungsi editor" dan tidak bisa dipanggil lewat `doPost`.
+- Fungsi yang hanya boleh dijalankan pemilik dari editor (mis. `setupSheet()`, `createOwner()`, `resetOwnerPin()`) diletakkan di bagian "Fungsi editor", **tanpa** akhiran `_` (fungsi berakhiran `_` tidak muncul di menu Run editor). Fungsi ini aman karena `doPost` hanya menjalankan aksi yang terdaftar di tabel `ACTIONS`; fungsi editor tidak pernah didaftarkan di sana.
 
 ### Bahasa antarmuka
 
