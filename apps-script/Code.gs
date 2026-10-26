@@ -1,0 +1,1 @@
+  pbpaste > apps-script/Code.gs
