@@ -53,7 +53,7 @@ const STR = {
 
     'board.moveTo': 'Pindahkan ke', 'board.empty': 'Belum ada subbab', 'board.emptyText': 'Isi bab dan subbab lewat seedStructure() di editor Apps Script.',
     'board.stageCol': 'Tahap {stage}', 'board.inStage': '{n} subbab di tahap {stage}', 'board.noneInStage': 'Tidak ada subbab di tahap ini.',
-    'board.hint': 'Seret kartu ke tahap lain, atau pakai pilihan tahap di tiap kartu.',
+    'board.hint': 'Klik kartu untuk mengubah detail subbab. Seret kartu ke tahap lain, atau pakai pilihan tahap di kartu.', 'board.editCard': 'Ubah {name}',
 
     'late.count': '{n} subbab lewat tenggat dan belum final.', 'late.empty': 'Tidak ada yang terlambat',
     'late.emptyText': 'Subbab yang lewat tenggat dan belum final akan muncul di sini.',
@@ -201,7 +201,7 @@ const STR = {
 
     'board.moveTo': 'Move to', 'board.empty': 'No sections yet', 'board.emptyText': 'Fill in chapters and sections with seedStructure() in the Apps Script editor.',
     'board.stageCol': '{stage} stage', 'board.inStage': '{n} sections in {stage}', 'board.noneInStage': 'No sections in this stage.',
-    'board.hint': 'Drag a card to another stage, or use the stage picker on each card.',
+    'board.hint': 'Click a card to edit the section. Drag a card to another stage, or use the stage picker on the card.', 'board.editCard': 'Edit {name}',
 
     'late.count': '{n} sections are past due and not final.', 'late.empty': 'Nothing overdue',
     'late.emptyText': 'Sections that are past due and not final will appear here.',

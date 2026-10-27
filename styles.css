@@ -450,3 +450,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; -webkit-user
 .sec-row .row-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 11px 0 11px 16px; background: none; border: 0; text-align: left; color: inherit; }
 button.row-main:active { background: var(--fill); }
 .link-icon { color: var(--tint-text); background: color-mix(in srgb, var(--tint) 15%, transparent); text-decoration: none; }
+
+/* Kartu Papan yang bisa diklik untuk diubah */
+.card.editable { cursor: pointer; transition: border-color .2s var(--ease); }
+.board-mobile .card.editable:active { background: var(--fill); }
+@media (hover: hover) { .card.editable:hover { border-color: color-mix(in srgb, var(--tint) 45%, var(--separator)); } }

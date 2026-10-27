@@ -1,6 +1,6 @@
 # DESIGN-SYSTEM — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.6, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.7, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v0.5 (K7: struktur ala templat Notion, visual ala Apple)
 
 ---
@@ -154,7 +154,7 @@ HP — Ringkasan                      HP — Sign-in
 | **Kapsul label** | Tinggi 22 px, `--r-full`, latar warna makna 15%, titik 6 px warna penuh, teks Caption `--label` |
 | **Bilah progres** | Tinggi 6 px, track `--fill`, isi `--tint` (berubah `--green` di 100%), angka persen di kanan (Subheadline, tabular) |
 | **Baris bab** | Judul bab (Headline), di bawahnya bilah progres, lalu dua baris Footnote: "2 dari 5 subbab final" dan "Target 20 Des 2026, 55 hari lagi". Kapsul merah "3 masukan terbuka" bila ada |
-| **Papan Penulisan** | Laptop dan tablet: lima kolom per tahap (lebar minimal 170 px, muat sekaligus di laptop), latar `--surface-2`, sudut `--r-lg`; kartu subbab `--surface`, sudut `--r-md`, tanpa bayangan. Seret: kursor tangan, kartu asal memudar, salinan kartu mengikuti kursor dengan miring 2° dan bayangan, kolom tujuan tersorot latar `--tint` 12% dan garis `--tint`; setelah dilepas kartu menunggu server ("Menyimpan…"). HP: segmented control untuk memilih tahap + daftar; pindah tahap lewat pilihan tahap di kartu |
+| **Papan Penulisan** | Laptop dan tablet: lima kolom per tahap (lebar minimal 170 px, muat sekaligus di laptop), latar `--surface-2`, sudut `--r-lg`; kartu subbab `--surface`, sudut `--r-md`, tanpa bayangan. Kartu milik pemilik bisa diklik (garis tepi kartu menjadi kebiruan saat kursor di atasnya) untuk membuka formulir subbab. Seret: kursor tangan, kartu asal memudar, salinan kartu mengikuti kursor dengan miring 2° dan bayangan, kolom tujuan tersorot latar `--tint` 12% dan garis `--tint`; setelah dilepas kartu menunggu server ("Menyimpan…"). HP: segmented control untuk memilih tahap + daftar; pindah tahap lewat pilihan tahap di kartu |
 | **Segmented control** | Track `--fill`, sudut 9 px; segmen terpilih `--surface` dengan bayangan halus, sudut 7 px. Dipakai untuk filter (Semua / Belum / Selesai) |
 | **Tombol** | Utama: latar `--tint`, teks putih Headline, tinggi 50 px (HP) / 36 px (laptop), sudut `--r-lg`. Sekunder (tinted): latar `--tint` 15%, teks `--tint-text`. Teks: hanya `--tint-text`. Berbahaya: memakai `--red` |
 | **Input** | Latar `--fill`, tanpa border, tinggi 44 px, sudut `--r-md`. Fokus: cincin 3 px `--tint` 40%. Input PIN: `type="password"`, `inputmode="numeric"`, `autocomplete="current-password"` |

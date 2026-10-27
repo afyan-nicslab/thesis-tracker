@@ -10,7 +10,7 @@
    ========================================================= */
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbxzzjxSbVnCuCAVUy1zWdDUcuMh2ovlZeZKrsrHImHOQiAe1juPd-rvFE7s_LUSQe4/exec',
-  VERSION: '2.2.0',
+  VERSION: '2.2.1',
   TZ: 'Asia/Jakarta'
 };
 
@@ -726,13 +726,16 @@ function vBabDetail(params) {
 }
 
 /* ---------- Papan Penulisan ---------- */
-function boardCard(s) {
+function boardCard(s, mobile) {
   const ch = byId('chapters', s.chapter_id);
   const late = isOverdue(s);
   const move = isOwner() ? '<label class="visually-hidden" for="mv-' + s.id + '">' + esc(t('board.moveTo')) + '</label><select class="select" id="mv-' + s.id + '" data-change="move-section" data-id="' + s.id + '" style="min-height:32px;padding:4px 30px 4px 10px;font-size:13px;width:auto">' +
     STAGES.map(v => '<option value="' + v + '"' + (v === Number(s.stage) ? ' selected' : '') + '>' + esc(stageLabel(v)) + '</option>').join('') + '</select>' : '';
-  const seret = isOwner() ? ' data-drag="1"' : '';
-  return '<div class="card" data-id="' + s.id + '" data-stage="' + Number(s.stage) + '"' + seret + '><div class="t-sub">' + esc(sectionLabel(s)) + '</div><div class="t-foot muted">' + esc(chapterLabel(ch)) + '</div>' +
+  // Laptop/tablet: klik = buka formulir, seret = pindah tahap (ditangani di bagian seret).
+  // HP: ketuk kartu membuka formulir lewat data-act.
+  const aksi = !isOwner() ? '' : (mobile ? ' data-act="edit-section"' : ' data-drag="1"') +
+    ' tabindex="0" role="button" aria-label="' + esc(t('board.editCard', { name: sectionLabel(s) })) + '"';
+  return '<div class="card' + (isOwner() ? ' editable' : '') + '" data-id="' + s.id + '" data-stage="' + Number(s.stage) + '"' + aksi + '><div class="t-sub">' + esc(sectionLabel(s)) + '</div><div class="t-foot muted">' + esc(chapterLabel(ch)) + '</div>' +
     (s.desc ? '<div class="t-foot muted clamp-2 card-desc">' + esc(s.desc) + '</div>' : '') +
     (safeUrl(s.link) ? '<div class="card-link">' + linkChip(s.link) + '</div>' : '') +
     '<div class="row-b"><span class="t-foot" style="color:' + (late ? 'var(--red)' : 'var(--label-2)') + '">' + (s.due_date ? esc(fmtDate(s.due_date)) : '') + '</span>' + move + '</div></div>';
@@ -742,14 +745,14 @@ function vPapan() {
   if (!secs.length) return pageHead(t('nav.papan')) + seg(penSeg(), '#/penulisan/papan') + emptyState('columns', t('board.empty'), t('board.emptyText'));
   const desktop = '<div class="board board-desktop">' + STAGES.map(v => {
     const list = secs.filter(s => Number(s.stage) === v);
-    return '<section class="col" data-stage="' + v + '" aria-label="' + esc(t('board.stageCol', { stage: stageLabel(v) })) + '"><div class="col-head">' + cap(stageLabel(v), STAGE_COLORS[v]) + '<span class="t-foot muted num">' + list.length + '</span></div>' + list.map(boardCard).join('') + '</section>';
+    return '<section class="col" data-stage="' + v + '" aria-label="' + esc(t('board.stageCol', { stage: stageLabel(v) })) + '"><div class="col-head">' + cap(stageLabel(v), STAGE_COLORS[v]) + '<span class="t-foot muted num">' + list.length + '</span></div>' + list.map(s => boardCard(s, false)).join('') + '</section>';
   }).join('') + '</div>';
   const cur = state.papanStage;
   const nCur = secs.filter(s => Number(s.stage) === cur).length;
   const mobile = '<div class="board-mobile"><div class="seg" role="tablist" style="margin-bottom:8px">' + STAGES.map(v =>
     '<button role="tab" aria-selected="' + (v === cur) + '" class="' + (v === cur ? 'on' : '') + '" data-act="papan-stage" data-v="' + v + '">' + esc(t('stageShort.' + v)) + '</button>').join('') + '</div>' +
     '<p class="t-foot muted" style="margin:0 4px 12px">' + esc(t('board.inStage', { n: nCur, stage: stageLabel(cur).toLowerCase() })) + '</p>' +
-    (secs.filter(s => Number(s.stage) === cur).map(boardCard).join('') || '<p class="t-sub muted" style="text-align:center;padding:24px 0">' + esc(t('board.noneInStage')) + '</p>') + '</div>';
+    (secs.filter(s => Number(s.stage) === cur).map(s => boardCard(s, true)).join('') || '<p class="t-sub muted" style="text-align:center;padding:24px 0">' + esc(t('board.noneInStage')) + '</p>') + '</div>';
   return pageHead(t('nav.papan'), isOwner() ? esc(t('board.hint')) : '') + seg(penSeg(), '#/penulisan/papan') + desktop + mobile;
 }
 
@@ -1302,6 +1305,9 @@ const FORMS = {
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-act]');
   if (!el || el.disabled) return;
+  // Klik pada tautan, pilihan, atau tombol di dalam elemen ber-data-act (mis. kartu) tidak memicu aksi induknya
+  const inner = e.target.closest('a, select, input, textarea, button, label');
+  if (inner && inner !== el && el.contains(inner)) return;
   const fn = UI[el.dataset.act];
   if (fn) { e.preventDefault(); fn(el); }
 });
@@ -1393,11 +1399,21 @@ document.addEventListener('pointermove', (e) => {
   }
   dragMove();
 });
-document.addEventListener('pointerup', () => { if (drag.active) dragDrop(); else dragReset(); });
+document.addEventListener('pointerup', (e) => {
+  if (drag.active) { dragDrop(); return; }
+  // Ditekan lalu dilepas tanpa diseret = klik: buka formulir subbab
+  const card = drag.card;
+  dragReset();
+  if (card && card.isConnected && e.type === 'pointerup') UI['edit-section'](card);
+});
 document.addEventListener('pointercancel', dragReset);
 document.addEventListener('touchmove', (e) => { if (drag.active) e.preventDefault(); }, { passive: false });
 document.addEventListener('contextmenu', (e) => { if (drag.card) e.preventDefault(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drag.active) dragReset(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && drag.active) { dragReset(); return; }
+  const card = e.target.closest && e.target.closest('.board-desktop .card[data-drag]');
+  if (card && (e.key === 'Enter' || e.key === ' ') && e.target === card) { e.preventDefault(); UI['edit-section'](card); }
+});
 
 
 /* =========================================================

@@ -1,6 +1,6 @@
 # PRD — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.4, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.5, 27 Oktober 2026
 **v1 (lama):** https://afyancho.github.io/thesis-tracker/ · **v2:** dibangun dari nol di repo GitHub baru (alamat menyusul)
 
 ---
@@ -79,7 +79,7 @@ Struktur modul ini terinspirasi templat Notion "Dissertation & Thesis Tracker" (
 | --- | --- | --- | --- |
 | F13 | Bab | Dikelompokkan per dokumen: Concept Note, Proposal (Bab I–III), Tesis (Bab IV–V). Per bab: tanggal target, bilah progres, jumlah subbab final, jumlah masukan terbuka, hitung mundur hari | W |
 | F14 | Subbab | Terisi awal sesuai Panduan (1.1 Latar Belakang sampai 5.4 Saran). Per subbab: tahap, tenggat, jumlah kata (opsional), tanda terlambat | W |
-| F15 | Papan Penulisan | Subbab dikelompokkan per tahap dalam kolom. Laptop dan tablet: kartu diseret antar-kolom (sentuh: tahan sebentar, lalu seret); pilihan tahap di tiap kartu tetap ada sebagai cara cadangan dan untuk keyboard. HP: satu tahap per layar, pindah tahap lewat pilihan, bukan seret | W |
+| F15 | Papan Penulisan | Subbab dikelompokkan per tahap dalam kolom. Laptop dan tablet: klik kartu (atau Enter saat kartu terfokus) membuka formulir subbab yang sama dengan di detail bab; kartu diseret antar-kolom (sentuh: tahan sebentar, lalu seret); pilihan tahap di tiap kartu tetap ada sebagai cara cadangan. HP: ketuk kartu membuka formulir subbab. HP: satu tahap per layar, pindah tahap lewat pilihan, bukan seret | W |
 | F16 | Masukan | Judul masukan, dari siapa (Pembimbing 1, Pembimbing 2, Penguji Sempro), bab terkait, tanggal diterima, status (Terbuka, Dikerjakan, Selesai), "langkahku" (tindakan yang akan dilakukan), lama menunggu dalam hari, tautan opsional ke entri Log Bimbingan | W |
 | F17 | Tampilan tersaring | Terlambat (subbab lewat tenggat dan belum final), Masukan Terbuka (terlama di atas), Log Masukan (terbaru di atas) | W |
 
@@ -179,6 +179,7 @@ Setelah v2 dipakai, deployment Apps Script v1 dimatikan dan `PIN_RAHASIA` dihapu
 - [ ] Pilihan bahasa tetap setelah aplikasi ditutup dan dibuka lagi
 - [ ] Tautan dokumen hanya diterima bila diawali `https://` (ditolak di tampilan dan di server); `javascript:` dan alamat tanpa https ditolak
 - [ ] Tautan di kartu Papan bisa diklik tanpa memicu seret kartu, dan terbuka di tab baru
+- [ ] Klik atau ketuk kartu Papan membuka formulir subbab; klik pada tautan atau pilihan tahap di dalam kartu tidak membuka formulir; menyeret kartu tidak membuka formulir
 - [ ] Menjalankan ulang `setupSheet()` menambah kolom `desc` dan `link` tanpa mengubah data lama
 - [ ] Penghitung bimbingan dan kehadiran Sempro sesuai jumlah baris log
 
