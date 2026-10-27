@@ -1,6 +1,6 @@
 # PRD — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.5, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.6, 27 Oktober 2026
 **v1 (lama):** https://afyancho.github.io/thesis-tracker/ · **v2:** dibangun dari nol di repo GitHub baru (alamat menyusul)
 
 ---
@@ -70,6 +70,7 @@ Prioritas: **W** = wajib di rilis pertama, **S** = sebaiknya ada, **O** = opsion
 | F20 | Aplikasi terpasang (PWA) | Tracker bisa dipasang di layar utama HP dan laptop: ikon sendiri, terbuka layar penuh tanpa bilah browser, cepat terbuka karena tampilan disimpan di perangkat. Saat offline, aplikasi tetap terbuka dan menampilkan pesan yang jelas beserta tombol coba lagi. Halaman Akun berisi tombol "Pasang aplikasi" (Chrome/Edge/Android) atau petunjuk "Bagikan → Tambahkan ke Layar Utama" (iPhone/iPad) | W |
 | F21 | Pilihan bahasa (Indonesia / English) | Semua teks antarmuka, pesan error (termasuk dari server), format tanggal, dan ringkasan yang disalin mengikuti bahasa terpilih. Pilihan ada di halaman Masuk dan halaman Akun, dan disimpan di perangkat. Isi data dari Sheet tidak diterjemahkan (lihat K12) | W |
 | F22 | Deskripsi dan tautan dokumen | Setiap bab dan subbab punya **deskripsi** (maks. 1.000 karakter) dan **tautan dokumen** (Google Docs/Drive, Dropbox, OneDrive, Overleaf, atau alamat `https://` lain). Tampil di detail bab, daftar subbab, dan kartu Papan Penulisan; tautan dibuka di tab baru. Diisi pemilik, terlihat juga oleh pembimbing (K13) | W |
+| F23 | Muat ulang data | Data dimuat ulang otomatis di belakang layar setiap kali tracker kembali dibuka dari latar belakang (minimal 60 detik sejak pemuatan terakhir, dan tidak saat formulir terbuka, kartu sedang diseret, atau perubahan sedang disinkronkan). Halaman Akun berisi grup "Data" dengan waktu pemuatan terakhir dan tombol **Muat ulang** | S |
 
 ### Modul Penulisan
 
@@ -177,6 +178,7 @@ Setelah v2 dipakai, deployment Apps Script v1 dimatikan dan `PIN_RAHASIA` dihapu
 - [ ] Respons dari Apps Script (data dan token) tidak pernah tersimpan di cache service worker
 - [ ] Dalam mode English, tidak ada teks antarmuka berbahasa Indonesia yang tersisa (di luar isi data dari Sheet), termasuk pesan error dari server dan banner sinkronisasi
 - [ ] Pilihan bahasa tetap setelah aplikasi ditutup dan dibuka lagi
+- [ ] Perubahan yang dibuat di Sheet atau oleh pembimbing terlihat setelah tracker dibuka kembali dari latar belakang, tanpa menutup aplikasi; formulir yang sedang diisi tidak tertutup oleh pemuatan otomatis
 - [ ] Tautan dokumen hanya diterima bila diawali `https://` (ditolak di tampilan dan di server); `javascript:` dan alamat tanpa https ditolak
 - [ ] Tautan di kartu Papan bisa diklik tanpa memicu seret kartu, dan terbuka di tab baru
 - [ ] Klik atau ketuk kartu Papan membuka formulir subbab; klik pada tautan atau pilihan tahap di dalam kartu tidak membuka formulir; menyeret kartu tidak membuka formulir

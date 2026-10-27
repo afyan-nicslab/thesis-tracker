@@ -1,6 +1,6 @@
 # ARCHITECTURE — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.7, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.8, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v1.0 · DESIGN-SYSTEM.md v0.2 · AGENTS.md
 
 ---
@@ -33,6 +33,7 @@ Tiga bagian yang sama jenisnya dengan v1, tetapi semuanya dibangun baru dari nol
 | Font | Google Fonts (Inter) sebagai pengganti di perangkat non-Apple; satu-satunya sumber luar |
 | Navigasi | Rute hash: `#/ringkasan`, `#/penulisan`, `#/bab/3`, `#/masukan`, `#/log`, `#/lainnya`, `#/masuk` |
 | Data | Saat masuk, panggil `data.bootstrap` sekali, simpan di objek `state`, lalu render. Perubahan dikirim per aksi |
+| Muat ulang (F23) | `refreshData()` memanggil `data.bootstrap` tanpa kerangka memuat. Dipicu oleh tombol di Akun, oleh event `online`, dan oleh `visibilitychange` saat halaman kembali terlihat, dengan syarat: sudah ≥ 60 detik sejak pemuatan terakhir, tidak ada sheet terbuka, tidak ada kartu diseret, dan tidak ada sinkronisasi berjalan |
 | Nilai turunan | Progres bab, hitungan masukan terbuka, tanda terlambat, dan penghitung x/10 **dihitung di frontend** dari data mentah dan tidak disimpan di Sheet |
 
 **Susunan `app.js`** (satu file, dibagi bagian berurutan):

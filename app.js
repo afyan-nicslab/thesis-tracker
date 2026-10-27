@@ -10,7 +10,7 @@
    ========================================================= */
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbxzzjxSbVnCuCAVUy1zWdDUcuMh2ovlZeZKrsrHImHOQiAe1juPd-rvFE7s_LUSQe4/exec',
-  VERSION: '2.2.1',
+  VERSION: '2.3.0',
   TZ: 'Asia/Jakarta'
 };
 
@@ -210,6 +210,8 @@ const state = {
   users: null,          // daftar akun (hanya pemilik, dimuat di halaman Kelola Akses)
   offline: false,       // sedang menampilkan salinan offline (K10)
   snapshotAt: 0,
+  loadedAt: 0,          // waktu data terakhir dimuat dari server (F23)
+  refreshing: false,
   loadError: '', loadErrorCode: '',
   todoFilter: 'semua',
   papanStage: 0,
@@ -934,6 +936,9 @@ function vAkun() {
       '<div class="row"><span class="grow">' + esc(t('field.email')) + '</span><span class="detail">' + esc(u.email) + '</span></div>' +
       '<div class="row"><span class="grow">' + esc(t('account.role')) + '</span><span class="detail">' + esc(roleLabel(u.role)) + '</span></div>') +
     '<section class="group-wrap"><h2 class="group-label">' + esc(t('lang.group')) + '</h2>' + langSeg + '</section>' +
+    group(t('refresh.group'), '<div class="row"><span class="grow t-sub">' + esc(state.loadedAt ? t('refresh.last', { time: fmtShortDateTime(state.loadedAt) }) : t('refresh.never')) + '</span>' +
+      '<button class="btn btn-tinted" data-act="refresh"' + (state.refreshing ? ' disabled' : '') + '>' + (state.refreshing ? '<span class="spinner sm"></span>' + esc(t('refresh.busy')) : esc(t('refresh.btn'))) + '</button></div>',
+      esc(t('refresh.foot'))) +
     installGroup() +
     '<section class="group-wrap"><h2 class="group-label">' + esc(t('account.changePin')) + '</h2><form class="list" data-form="change-pin" novalidate style="padding:16px">' +
     fText('oldPin', t('account.oldPin'), '', 'type="password" inputmode="numeric" autocomplete="current-password"') +
@@ -1235,7 +1240,8 @@ const UI = {
     location.hash = '#/ringkasan';
     render();
   },
-  'retry-load': () => loadData()
+  'retry-load': () => loadData(),
+  'refresh': () => { if (blockedOffline()) return; refreshData(true); }
 };
 
 const CHANGE = {
@@ -1468,13 +1474,31 @@ function render() {
   snapshot.save();
 }
 
-/** Memuat ulang data di belakang layar (tanpa kerangka), mis. setelah "Coba lagi" atau saat koneksi kembali. */
-async function refreshData() {
+/** Memuat ulang data di belakang layar (tanpa kerangka). manual = dari tombol Muat ulang (F23). */
+async function refreshData(manual) {
+  if (state.refreshing) return;
+  state.refreshing = true;
+  if (manual) render();
   try {
     const res = await api.call('data.bootstrap');
-    state.user = res.user; state.data = res.data; state.offline = false;
+    state.user = res.user; state.data = res.data; state.offline = false; state.loadedAt = Date.now();
+    if (currentKey === 'akses') state.users = null; // daftar akun ikut dimuat ulang
+    state.refreshing = false;
     render();
-  } catch (e) { if (e.code !== 'NETWORK') handleErr(e); }
+    if (manual) showBanner(t('refresh.done'), 'green');
+  } catch (e) {
+    state.refreshing = false;
+    if (manual) { render(); handleErr(e); }
+    else if (e.code !== 'NETWORK') handleErr(e);
+  }
+}
+
+/** Pemuatan otomatis saat tracker kembali terlihat, hanya bila aman (tidak mengganggu pekerjaan yang sedang berjalan). */
+function autoRefresh() {
+  if (document.visibilityState !== 'visible' || state.phase !== 'app' || !state.data) return;
+  if (state.offline || state.refreshing || sheetCleanup || drag.card || sync.pending > 0) return;
+  if (Date.now() - state.loadedAt < 60000) return;
+  refreshData(false);
 }
 
 async function loadData() {
@@ -1484,6 +1508,7 @@ async function loadData() {
     state.user = res.user;
     state.data = res.data;
     state.offline = false;
+    state.loadedAt = Date.now();
     state.phase = 'app';
     render();
   } catch (e) {
@@ -1500,6 +1525,8 @@ async function loadData() {
 }
 
 window.addEventListener('hashchange', () => { closeSheet(); render(); });
+document.addEventListener('visibilitychange', autoRefresh);
+window.addEventListener('focus', autoRefresh);
 window.addEventListener('online', () => { if (state.offline) refreshData(); else if (state.phase === 'error' && state.loadErrorCode === 'NETWORK') loadData(); });
 
 /* PWA */
