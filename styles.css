@@ -348,7 +348,7 @@ button.row:active, a.row:active { background: var(--fill); }
 .ch-row .lines { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
 
 /* ============ Papan Penulisan ============ */
-.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(170px, 1fr); gap: 10px; overflow-x: auto; padding-bottom: 8px; }
 .col { background: var(--surface-2); border-radius: var(--r-lg); padding: 10px; min-height: 120px; }
 @media (prefers-color-scheme: light) { .col { background: rgba(118,118,128,.08); } }
 .col-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 10px; }
@@ -359,7 +359,7 @@ button.row:active, a.row:active { background: var(--fill); }
 .card .t-sub { font-weight: 600; }
 .card .t-foot { margin-top: 4px; }
 .card .row-b .t-foot { white-space: nowrap; }
-.card .row-b { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; }
+.card .row-b { flex-wrap: wrap; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; }
 
 /* ============ Lain-lain ============ */
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 15px; }
@@ -379,3 +379,17 @@ button.row:active, a.row:active { background: var(--fill); }
 .board-desktop { display: none; }
 @media (min-width: 768px) { .board-desktop { display: grid; } .board-mobile { display: none; } }
 @media (prefers-color-scheme: dark) { .seg .on { background: #636366; } }
+
+/* Seret kartu (laptop dan tablet) */
+.board-desktop .card[data-drag] { cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.card.dragging { opacity: .35; }
+.card.pending { opacity: .7; }
+.card .pending-note { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.col { transition: background .2s var(--ease), box-shadow .2s var(--ease); }
+.col.drop { background: color-mix(in srgb, var(--tint) 12%, transparent); box-shadow: inset 0 0 0 2px var(--tint); }
+.ghost {
+  position: fixed; z-index: 70; margin: 0; pointer-events: none;
+  transform: rotate(2deg); box-shadow: 0 12px 28px rgba(0,0,0,.18);
+}
+body.is-dragging, body.is-dragging * { cursor: grabbing !important; -webkit-user-select: none; user-select: none; }
+@media (prefers-reduced-motion: reduce) { .ghost { transform: none; } }

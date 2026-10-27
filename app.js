@@ -533,7 +533,8 @@ function boardCard(s) {
   const late = isOverdue(s);
   const move = isOwner() ? '<label class="visually-hidden" for="mv-' + s.id + '">Pindahkan ke</label><select class="select" id="mv-' + s.id + '" data-change="move-section" data-id="' + s.id + '" style="min-height:32px;padding:4px 30px 4px 10px;font-size:13px;width:auto">' +
     STAGES.map(st => '<option value="' + st.v + '"' + (st.v === Number(s.stage) ? ' selected' : '') + '>' + esc(st.label) + '</option>').join('') + '</select>' : '';
-  return '<div class="card"><div class="t-sub">' + esc(sectionLabel(s)) + '</div><div class="t-foot muted">' + esc(chapterLabel(ch)) + '</div>' +
+  const seret = isOwner() ? ' data-drag="1"' : '';
+  return '<div class="card" data-id="' + s.id + '" data-stage="' + Number(s.stage) + '"' + seret + '><div class="t-sub">' + esc(sectionLabel(s)) + '</div><div class="t-foot muted">' + esc(chapterLabel(ch)) + '</div>' +
     '<div class="row-b"><span class="t-foot" style="color:' + (late ? 'var(--red)' : 'var(--label-2)') + '">' + (s.due_date ? esc(fmtDate(s.due_date)) : '') + '</span>' + move + '</div></div>';
 }
 function vPapan() {
@@ -541,7 +542,7 @@ function vPapan() {
   if (!secs.length) return pageHead('Papan Penulisan') + seg(PEN_SEG, '#/penulisan/papan') + emptyState('columns', 'Belum ada subbab', 'Isi bab dan subbab lewat seedStructure() di editor Apps Script.');
   const desktop = '<div class="board board-desktop">' + STAGES.map(st => {
     const list = secs.filter(s => Number(s.stage) === st.v);
-    return '<section class="col"><div class="col-head">' + cap(st.label, st.c) + '<span class="t-foot muted num">' + list.length + '</span></div>' + list.map(boardCard).join('') + '</section>';
+    return '<section class="col" data-stage="' + st.v + '" aria-label="Tahap ' + esc(st.label) + '"><div class="col-head">' + cap(st.label, st.c) + '<span class="t-foot muted num">' + list.length + '</span></div>' + list.map(boardCard).join('') + '</section>';
   }).join('') + '</div>';
   const cur = state.papanStage;
   const nCur = secs.filter(s => Number(s.stage) === cur).length;
@@ -549,7 +550,7 @@ function vPapan() {
     '<button role="tab" aria-selected="' + (st.v === cur) + '" class="' + (st.v === cur ? 'on' : '') + '" data-act="papan-stage" data-v="' + st.v + '">' + esc(st.label.replace('Di pembimbing', 'Pembimbing').replace('Belum mulai', 'Belum')) + '</button>').join('') + '</div>' +
     '<p class="t-foot muted" style="margin:0 4px 12px">' + nCur + ' subbab di tahap ' + esc(STAGES[cur].label.toLowerCase()) + '</p>' +
     (secs.filter(s => Number(s.stage) === cur).map(boardCard).join('') || '<p class="t-sub muted" style="text-align:center;padding:24px 0">Tidak ada subbab di tahap ini.</p>') + '</div>';
-  return pageHead('Papan Penulisan', isOwner() ? 'Pindahkan subbab ke tahap berikutnya lewat pilihan di tiap kartu.' : '') + seg(PEN_SEG, '#/penulisan/papan') + desktop + mobile;
+  return pageHead('Papan Penulisan', isOwner() ? 'Seret kartu ke tahap lain, atau pakai pilihan tahap di tiap kartu.' : '') + seg(PEN_SEG, '#/penulisan/papan') + desktop + mobile;
 }
 
 /* ---------- Terlambat ---------- */
@@ -978,16 +979,19 @@ const UI = {
   'retry-load': () => loadData()
 };
 
+/** Memindah subbab ke tahap lain. Tampilan baru dianggap tersimpan setelah server membalas;
+ *  bila gagal, render() mengembalikan kartu ke kolom asal. */
+async function moveSection(id, stage) {
+  try {
+    replaceRow('sections', await api.call('section.update', { id: Number(id), stage: Number(stage) }));
+  } catch (e) {
+    handleErr(e);
+  }
+  render();
+}
+
 const CHANGE = {
-  'move-section': async (el) => {
-    const id = Number(el.dataset.id);
-    const lama = byId('sections', id).stage;
-    el.disabled = true;
-    try {
-      replaceRow('sections', await api.call('section.update', { id: id, stage: Number(el.value) }));
-      render();
-    } catch (e) { el.value = lama; el.disabled = false; handleErr(e); }
-  },
+  'move-section': (el) => { el.disabled = true; moveSection(el.dataset.id, el.value); },
   'user-active': async (el) => {
     const aktif = el.checked;
     el.disabled = true;
@@ -1051,6 +1055,91 @@ document.addEventListener('submit', (e) => {
 });
 
 
+/* ---------- Seret kartu di Papan (laptop dan tablet) ----------
+   Mouse/pena: seret langsung. Sentuh: tahan ±0,3 detik, lalu seret.
+   Di HP (< 768 px) papan tampil per tahap, jadi pemindahan memakai pilihan tahap. */
+const drag = { card: null, active: false, ghost: null, over: null, timer: null, touch: false, x0: 0, y0: 0, x: 0, y: 0, dx: 0, dy: 0 };
+
+function dragReset() {
+  clearTimeout(drag.timer);
+  if (drag.ghost) drag.ghost.remove();
+  if (drag.card) drag.card.classList.remove('dragging');
+  if (drag.over) drag.over.classList.remove('drop');
+  document.body.classList.remove('is-dragging');
+  Object.assign(drag, { card: null, active: false, ghost: null, over: null, timer: null });
+}
+function dragStart() {
+  const card = drag.card;
+  if (!card || !card.isConnected) return dragReset();
+  const r = card.getBoundingClientRect();
+  drag.dx = drag.x - r.left; drag.dy = drag.y - r.top;
+  const g = card.cloneNode(true);
+  g.classList.add('ghost'); g.removeAttribute('data-id');
+  g.style.width = r.width + 'px'; g.style.left = r.left + 'px'; g.style.top = r.top + 'px';
+  $$('select', g).forEach(x => x.remove());
+  document.body.appendChild(g);
+  drag.ghost = g; drag.active = true;
+  card.classList.add('dragging');
+  document.body.classList.add('is-dragging');
+}
+function dragMove() {
+  drag.ghost.style.left = (drag.x - drag.dx) + 'px';
+  drag.ghost.style.top = (drag.y - drag.dy) + 'px';
+  const el = document.elementFromPoint(drag.x, drag.y);
+  const col = el && el.closest('.board-desktop .col[data-stage]');
+  if (col !== drag.over) {
+    if (drag.over) drag.over.classList.remove('drop');
+    if (col && Number(col.dataset.stage) !== Number(drag.card.dataset.stage)) col.classList.add('drop');
+    drag.over = col;
+  }
+  // Gulir papan ke samping saat kartu dibawa ke tepi
+  const board = $('.board-desktop');
+  if (board) {
+    const b = board.getBoundingClientRect();
+    if (drag.x > b.right - 48) board.scrollLeft += 14;
+    else if (drag.x < b.left + 48) board.scrollLeft -= 14;
+  }
+}
+function dragDrop() {
+  const card = drag.card, col = drag.over;
+  const id = card.dataset.id, dari = Number(card.dataset.stage);
+  const ke = col ? Number(col.dataset.stage) : dari;
+  dragReset();
+  if (ke === dari) return;
+  // Tampilkan kartu di kolom tujuan dalam keadaan menunggu server
+  col.appendChild(card);
+  card.classList.add('pending');
+  const sel = $('select', card); if (sel) sel.disabled = true;
+  card.insertAdjacentHTML('beforeend', '<div class="pending-note t-foot muted"><span class="spinner sm"></span>Menyimpan…</div>');
+  moveSection(id, ke);
+}
+
+document.addEventListener('pointerdown', (e) => {
+  const card = e.target.closest('.board-desktop .card[data-drag]');
+  if (!card || drag.card || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  if (e.target.closest('select, button, a, input, label')) return;
+  Object.assign(drag, { card: card, touch: e.pointerType === 'touch', x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY });
+  if (drag.touch) drag.timer = setTimeout(dragStart, 280);
+  else e.preventDefault(); // cegah teks ikut terseleksi saat menyeret dengan mouse
+});
+document.addEventListener('pointermove', (e) => {
+  if (!drag.card) return;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (!drag.active) {
+    const jarak = Math.hypot(drag.x - drag.x0, drag.y - drag.y0);
+    if (drag.touch) { if (jarak > 8) dragReset(); }  // bergerak sebelum ditahan = menggulir
+    else if (jarak > 6) dragStart();
+    return;
+  }
+  dragMove();
+});
+document.addEventListener('pointerup', () => { if (drag.active) dragDrop(); else dragReset(); });
+document.addEventListener('pointercancel', dragReset);
+document.addEventListener('touchmove', (e) => { if (drag.active) e.preventDefault(); }, { passive: false });
+document.addEventListener('contextmenu', (e) => { if (drag.card) e.preventDefault(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && drag.active) dragReset(); });
+
+
 /* =========================================================
    8. ROUTER & INIT
    ========================================================= */
@@ -1093,8 +1182,10 @@ function render() {
   const r = resolveRoute();
   const keepScroll = r.key === lastKey;
   const y = window.scrollY;
+  const bx = keepScroll && $('.board-desktop') ? $('.board-desktop').scrollLeft : 0;
   app.innerHTML = shell(state.data ? r.view() : vLoading(), r.key, r.wide);
   window.scrollTo(0, keepScroll ? y : 0);
+  if (bx && $('.board-desktop')) $('.board-desktop').scrollLeft = bx;
   lastKey = r.key;
   document.title = r.title + ' – Thesis Tracker';
 }
