@@ -111,9 +111,25 @@ const session = {
   }
 };
 
+// Aksi yang hanya membaca atau mengurus sesi: tidak memunculkan banner sinkronisasi
+const READ_ACTIONS = ['auth.login', 'auth.logout', 'auth.me', 'data.bootstrap', 'admin.users.list'];
+
 const api = {
-  /** Satu-satunya pintu ke server. Menambahkan token dan menerjemahkan error. */
+  /** Satu-satunya pintu ke server. Menambahkan token, menerjemahkan error,
+   *  dan menampilkan banner sinkronisasi untuk setiap perubahan. */
   async call(action, payload) {
+    if (READ_ACTIONS.indexOf(action) >= 0) return this.raw(action, payload);
+    const tiket = sync.start();
+    try {
+      const data = await this.raw(action, payload);
+      sync.done(tiket);
+      return data;
+    } catch (e) {
+      sync.fail(tiket, e, () => api.raw(action, payload));
+      throw e;
+    }
+  },
+  async raw(action, payload) {
     let res;
     try {
       const r = await fetch(CONFIG.API_URL, {
@@ -299,8 +315,112 @@ function showBanner(msg, color, sticky) {
 }
 function handleErr(e) {
   if (e && e.code === 'AUTH_REQUIRED') return; // sudah diarahkan ke halaman Masuk
+  if (e && e.syncShown) return;                // sudah tampil di banner sinkronisasi
   showBanner((e && e.message) || 'Terjadi kesalahan. Coba lagi.', 'red');
 }
+
+/* Banner sinkronisasi (F19, K9)
+   Persen adalah PERKIRAAN yang naik halus menuju ±90% selama menunggu server,
+   karena progres satu permintaan ke Apps Script tidak bisa diukur.
+   100% dan "Tersinkron" hanya tampil setelah server membalas sukses. */
+const sync = {
+  el: null, pending: 0, total: 0, shown: 0, t0: 0, raf: 0, hideTimer: 0, nextId: 1, failed: false,
+  CIRC: 2 * Math.PI * 15,
+  start() {
+    clearTimeout(this.hideTimer);
+    if (this.pending === 0) { this.total = 0; this.t0 = performance.now(); this.shown = 0; this.failed = false; }
+    this.pending++; this.total++;
+    this.draw('run');
+    this.loop();
+    return this.nextId++;
+  },
+  done() {
+    this.pending = Math.max(0, this.pending - 1);
+    if (this.failed) return; // biarkan banner gagal tetap tampil sampai ditutup atau dicoba lagi
+    if (this.pending === 0) this.finish();
+    else this.draw('run');
+  },
+  fail(tiket, err, ulang) {
+    this.pending = Math.max(0, this.pending - 1);
+    // Hanya masalah koneksi atau server yang ditampilkan di banner, dengan tombol "Coba lagi".
+    // Kesalahan isian (VALIDATION) dan akses (FORBIDDEN dsb.) tetap tampil di tempat asalnya.
+    if (err && (err.code === 'NETWORK' || err.code === 'SERVER')) {
+      err.syncShown = true;
+      this.failed = true;
+      cancelAnimationFrame(this.raf);
+      this.draw('fail', err.message, ulang);
+    } else if (this.pending === 0) {
+      this.hide(0);
+    }
+  },
+  /** Perkiraan: mendekati 90% secara bertahap (konstanta waktu ±1,2 detik). */
+  estimate() { return 90 * (1 - Math.exp(-(performance.now() - this.t0) / 1200)); },
+  loop() {
+    cancelAnimationFrame(this.raf);
+    const step = () => {
+      if (this.pending === 0 || this.failed) return;
+      this.shown = Math.max(this.shown, this.estimate());
+      this.setPct(this.shown);
+      this.raf = requestAnimationFrame(step);
+    };
+    this.raf = requestAnimationFrame(step);
+  },
+  finish() {
+    cancelAnimationFrame(this.raf);
+    this.shown = 100;
+    this.draw('ok');
+    this.hide(1500);
+  },
+  hide(ms) {
+    clearTimeout(this.hideTimer);
+    this.hideTimer = setTimeout(() => { if (this.el) this.el.classList.remove('show'); }, ms);
+  },
+  mount() {
+    if (this.el && this.el.isConnected) return;
+    this.el = document.createElement('div');
+    this.el.className = 'sync';
+    this.el.setAttribute('role', 'status');
+    this.el.setAttribute('aria-live', 'polite');
+    this.el.innerHTML = '<div class="ring"><svg viewBox="0 0 36 36" aria-hidden="true"><circle class="trk" cx="18" cy="18" r="15"/><circle class="val" cx="18" cy="18" r="15"/></svg><span class="pct num">0%</span></div>' +
+      '<div class="txt"><div class="t1 t-sub"></div><div class="t2 t-foot muted"></div></div><button type="button" class="btn btn-tinted retry" hidden>Coba lagi</button><button type="button" class="icon-btn close" aria-label="Tutup" hidden>' + icon('x') + '</button>';
+    document.body.appendChild(this.el);
+    $('.close', this.el).addEventListener('click', () => this.hide(0));
+  },
+  setPct(p) {
+    if (!this.el) return;
+    const v = Math.max(0, Math.min(100, p));
+    $('.val', this.el).style.strokeDashoffset = String(this.CIRC * (1 - v / 100));
+    $('.pct', this.el).textContent = Math.floor(v) + '%';
+  },
+  draw(mode, pesan, ulang) {
+    this.mount();
+    const el = this.el;
+    el.className = 'sync show ' + mode;
+    $('.val', el).style.strokeDasharray = String(this.CIRC);
+    const t1 = $('.t1', el), t2 = $('.t2', el), retry = $('.retry', el), close = $('.close', el);
+    retry.hidden = mode !== 'fail'; close.hidden = mode !== 'fail';
+    if (mode === 'run') {
+      t1.textContent = 'Menyinkronkan…';
+      t2.textContent = this.total > 1 ? (this.total - this.pending) + ' dari ' + this.total + ' perubahan selesai' : 'Mengirim perubahan ke server';
+      this.setPct(this.shown);
+    } else if (mode === 'ok') {
+      t1.textContent = 'Tersinkron';
+      t2.textContent = this.total > 1 ? this.total + ' perubahan tersimpan' : 'Perubahan tersimpan';
+      this.setPct(100);
+    } else {
+      t1.textContent = 'Gagal menyinkronkan';
+      t2.textContent = pesan || 'Coba lagi.';
+      retry.onclick = async () => {
+        const tiket = this.start();
+        try {
+          await ulang();
+          this.done(tiket);
+          await refreshData();
+        } catch (e) { this.fail(tiket, e, ulang); if (!e.syncShown) handleErr(e); }
+      };
+    }
+  }
+};
 
 /* Sheet: formulir yang muncul dari bawah (HP) atau dialog di tengah (laptop) */
 let sheetCleanup = null;
@@ -1188,6 +1308,15 @@ function render() {
   if (bx && $('.board-desktop')) $('.board-desktop').scrollLeft = bx;
   lastKey = r.key;
   document.title = r.title + ' – Thesis Tracker';
+}
+
+/** Memuat ulang data di belakang layar (tanpa kerangka), mis. setelah "Coba lagi" berhasil. */
+async function refreshData() {
+  try {
+    const res = await api.call('data.bootstrap');
+    state.user = res.user; state.data = res.data;
+    render();
+  } catch (e) { handleErr(e); }
 }
 
 async function loadData() {

@@ -1,6 +1,6 @@
 # PRD — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.1, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.2, 27 Oktober 2026
 **v1 (lama):** https://afyancho.github.io/thesis-tracker/ · **v2:** dibangun dari nol di repo GitHub baru (alamat menyusul)
 
 ---
@@ -66,6 +66,7 @@ Prioritas: **W** = wajib di rilis pertama, **S** = sebaiknya ada, **O** = opsion
 | F11 | Tampilan per peran | Menu dan tombol menyesuaikan peran; pembimbing tidak melihat tombol ubah di bagian yang hanya bisa dibaca | W |
 | F12 | (digabung ke F16) | Catatan pembimbing kini dicatat sebagai Masukan | – |
 | F18 | Ganti PIN | Setiap pengguna dapat mengganti PIN-nya sendiri, sehingga PIN awal yang dibuatkan pemilik untuk pembimbing tidak perlu dipakai seterusnya | S |
+| F19 | Banner sinkronisasi | Di semua halaman, setiap perubahan yang dikirim ke server (pindah kartu, centang, simpan formulir, hapus, kelola akses) memunculkan banner dengan cincin progres dan persen 0–100% (lihat K9) | W |
 
 ### Modul Penulisan
 
@@ -142,6 +143,7 @@ Setelah v2 dipakai, deployment Apps Script v1 dimatikan dan `PIN_RAHASIA` dihapu
 | K5 | Metode sign-in | Email + PIN pribadi per pengguna; hash dengan salt per pengguna dan `PIN_PEPPER` di Script Properties (lihat Lampiran B) | **Diputuskan 26 Okt 2026** |
 | K6 | Bagian yang dilihat pembimbing | Lihat: Dashboard, Bab, Subbab, Papan Penulisan, Masukan, Linimasa, Checklist Syarat, Log Bimbingan, Bacaan Wajib, Log AI Disclosure. Tidak lihat: catatan pribadi task, Prompt Library, Kelola Akses | **Disetujui 26 Okt 2026** |
 | K8 | Cara membangun | Dari nol: repo GitHub baru, Google Sheet baru, proyek Apps Script baru. v1 tidak diubah dan dimatikan setelah v2 dipakai | **Diputuskan 26 Okt 2026** |
+| K9 | Persen di banner sinkronisasi | Persen perkiraan yang naik halus sampai sekitar 90% selama menunggu, lalu 100% hanya setelah server membalas sukses (pilihan pemilik; versi "persen dari jumlah proses" tidak dipilih) | **Diputuskan 27 Okt 2026** |
 | K7 | Arah tampilan | Struktur informasi mengikuti templat Notion (bab, subbab, masukan, tampilan tersaring); bahasa visual mengikuti gaya Apple (lihat DESIGN-SYSTEM.md) | **Diputuskan 26 Okt 2026** |
 
 ## 9. Kriteria penerimaan rilis pertama
@@ -159,6 +161,7 @@ Setelah v2 dipakai, deployment Apps Script v1 dimatikan dan `PIN_RAHASIA` dihapu
 - [ ] Masukan yang diubah ke Selesai langsung hilang dari Masukan Terbuka dan mengurangi hitungan di babnya
 - [ ] Akun pembimbing dapat membuat Masukan, tetapi tidak dapat mengubah tahap subbab
 - [ ] Kartu yang diseret ke kolom lain tersimpan setelah server membalas; bila gagal, kartu kembali ke kolom asal disertai pesan
+- [ ] Setiap perubahan memunculkan banner sinkronisasi; 100% dan "Tersinkron" hanya muncul setelah server membalas sukses; bila koneksi putus, banner merah dengan tombol "Coba lagi" yang benar-benar mengirim ulang
 - [ ] Penghitung bimbingan dan kehadiran Sempro sesuai jumlah baris log
 
 ---

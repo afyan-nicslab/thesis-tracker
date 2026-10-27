@@ -393,3 +393,32 @@ button.row:active, a.row:active { background: var(--fill); }
 }
 body.is-dragging, body.is-dragging * { cursor: grabbing !important; -webkit-user-select: none; user-select: none; }
 @media (prefers-reduced-motion: reduce) { .ghost { transform: none; } }
+
+/* Banner sinkronisasi (DESIGN-SYSTEM bagian 7) */
+.sync {
+  position: fixed; z-index: 65; left: 50%; top: calc(env(safe-area-inset-top) + 12px);
+  display: flex; align-items: center; gap: 12px; max-width: calc(100% - 32px);
+  padding: 10px 14px 10px 10px; border-radius: var(--r-xl);
+  background: var(--surface); border: var(--hair) solid var(--separator);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  transform: translate(-50%, -16px); opacity: 0; pointer-events: none;
+  transition: transform .3s var(--ease), opacity .25s var(--ease);
+}
+.sync.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.sync .ring { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
+.sync .ring svg { width: 36px; height: 36px; transform: rotate(-90deg); }
+.sync .ring circle { fill: none; stroke-width: 3; }
+.sync .ring .trk { stroke: var(--fill); }
+.sync .ring .val { stroke: var(--tint); stroke-linecap: round; transition: stroke .2s var(--ease); }
+.sync .ring .pct { position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; font-weight: 600; }
+.sync.ok .ring .val { stroke: var(--green); }
+.sync.fail .ring .val { stroke: var(--red); }
+.sync .txt { min-width: 0; }
+.sync .t1 { font-weight: 600; }
+.sync.fail .t1 { color: var(--red); }
+.sync .t2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sync.fail .t2 { white-space: normal; }
+.sync .retry { height: 30px; padding: 0 10px; font-size: 13px; }
+@media (min-width: 1024px) { .sync { left: calc(50% + 130px); } }
+@media (prefers-reduced-motion: reduce) { .sync { transition: none; } }
+.sync [hidden] { display: none !important; }

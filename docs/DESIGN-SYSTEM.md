@@ -1,6 +1,6 @@
 # DESIGN-SYSTEM — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.3, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.4, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v0.5 (K7: struktur ala templat Notion, visual ala Apple)
 
 ---
@@ -13,7 +13,7 @@ Tracker ini terasa seperti aplikasi bawaan iPhone dan Mac: tenang, rapi, dan lan
 2. **Satu warna aksen.** Biru sistem dipakai untuk semua yang bisa diketuk. Warna lain hanya membawa makna (tahap, status).
 3. **Hierarki lewat ukuran dan ketebalan huruf**, bukan lewat warna atau huruf kapital.
 4. **Satu momen menonjol:** jalur milestone di halaman Ringkasan (concept note sampai Sidang), ditampilkan besar dengan tahap aktif disorot. Bagian lain tetap sederhana.
-5. **Jujur soal status.** "Tersimpan" hanya tampil setelah server membalas sukses. Memuat ditunjukkan dengan indikator putar, bukan bilah progres buatan.
+5. **Jujur soal hasil.** "Tersimpan" dan "Tersinkron 100%" hanya tampil setelah server membalas sukses. Memuat data awal memakai baris kerangka. Pengecualian yang diputuskan pemilik (27 Okt 2026): banner sinkronisasi menampilkan persentase **perkiraan** yang naik halus sampai sekitar 90% selama menunggu server, karena progres sebenarnya dari satu permintaan ke Apps Script tidak bisa diukur; angka 100% tetap hanya muncul setelah server membalas sukses.
 
 **Batas peniruan.** Yang diambil adalah gaya visual Apple (Human Interface Guidelines) sebagai acuan. Logo Apple, file font SF Pro, dan ikon SF Symbols tidak dipakai, karena lisensinya terbatas untuk aplikasi di platform Apple. Penggantinya dijelaskan di bagian 3 dan 6.
 
@@ -160,6 +160,7 @@ HP — Ringkasan                      HP — Sign-in
 | **Input** | Latar `--fill`, tanpa border, tinggi 44 px, sudut `--r-md`. Fokus: cincin 3 px `--tint` 40%. Input PIN: `type="password"`, `inputmode="numeric"`, `autocomplete="current-password"` |
 | **Sheet** | HP: muncul dari bawah, sudut atas `--r-xl`, garis pegangan 36 × 5 px. Laptop: dialog di tengah, lebar 480 px. Dipakai untuk mengisi masukan, log bimbingan, dan catatan |
 | **Status simpan** | Di samping tombol: indikator putar + "Menyimpan…", lalu ikon centang + "Tersimpan" **setelah server membalas**, atau ikon peringatan + "Gagal menyimpan" + tombol "Coba lagi" |
+| **Banner sinkronisasi** | Muncul di semua halaman setiap kali perubahan dikirim ke server. Kapsul melayang di atas tengah layar, latar `--surface` dengan bayangan halus. Kiri: cincin progres 36 px (track `--fill`, isi `--tint`, tebal 3 px) dengan persen di tengah (10 px, tabular). Kanan: "Menyinkronkan…" dan jumlah perubahan bila lebih dari satu. Persen naik halus sampai sekitar 90% selama menunggu; setelah server membalas: 100%, cincin `--green`, teks "Tersinkron", lalu hilang setelah 1,5 detik. Gagal karena koneksi atau server: cincin `--red`, pesan, tombol "Coba lagi" |
 | **Banner** | Pengganti `alert()`: kotak `--r-lg` dengan latar warna makna 15%, ikon, dan pesan; tetap di halaman sampai ditutup atau masalah selesai |
 | **Empty state** | Ikon 48 px `--label-3`, judul Title 3, satu kalimat Footnote, dan satu tombol aksi bila relevan |
 | **Memuat** | Indikator putar di tengah saat pertama kali; baris kerangka (skeleton) abu-abu untuk daftar |
