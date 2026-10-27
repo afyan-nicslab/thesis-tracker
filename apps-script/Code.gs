@@ -214,6 +214,14 @@ function validatePin_(pin) {
   return '';
 }
 
+/** Kunci terjemahan untuk pesan dari validatePin_. */
+function pinErrorKey_(pesan) {
+  if (/6 sampai 12/.test(pesan)) return 'pinLength';
+  if (/berulang/.test(pesan)) return 'pinRepeat';
+  if (/urutan/.test(pesan)) return 'pinSequence';
+  return 'invalid';
+}
+
 /** Mengubah deretan byte menjadi teks heksadesimal (hanya 0-9 dan a-f). */
 function toHex_(bytes) {
   return bytes.map(function (b) { return ('0' + (b & 0xff).toString(16)).slice(-2); }).join('');
@@ -350,7 +358,7 @@ function menuResetOwnerPin() {
 // API WEB: pintu masuk, respons, dan error
 // Acuan: docs/ARCHITECTURE.md bagian 3–5
 // ============================================================
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.1.0';
 const SESSION_HOURS = 12;        // sesi biasa
 const REMEMBER_DAYS = 30;        // sesi "Ingat perangkat ini"
 const LOCK_FAILS = 5;            // salah PIN per akun sebelum terkunci
@@ -418,12 +426,29 @@ const ROLE_RULES = {
   'admin.users.resetPin': OWNER
 };
 
-/** Membuat error dengan kode yang dikenali frontend. */
-function fail_(kode, pesan) {
+/**
+ * Membuat error dengan kode yang dikenali frontend.
+ * key + params dipakai frontend untuk menerjemahkan pesan (ID/EN);
+ * pesan (bahasa Indonesia) tetap dikirim sebagai cadangan.
+ */
+function fail_(kode, pesan, key, params) {
   const e = new Error(pesan);
   e.code = kode;
+  e.key = key || '';
+  e.params = params || {};
   return e;
 }
+
+// Label kolom (bahasa Indonesia) → kunci yang diterjemahkan frontend
+const LABEL_KEY = {
+  'id': 'id', 'Status': 'status', 'Catatan': 'note', 'Status verifikasi': 'verifyStatus', 'Tanggal target': 'targetDate',
+  'Tahap': 'stage', 'Tenggat': 'dueDate', 'Jumlah kata': 'words', 'Isi masukan': 'feedbackText', 'Bab': 'chapter',
+  'Dari': 'from', 'Tanggal diterima': 'receivedAt', 'Langkahku': 'nextStep', 'Log bimbingan': 'bimbingan', 'Tanggal': 'date',
+  'Pembimbing': 'supervisor', 'Cara bimbingan': 'mode', 'Topik': 'topic', 'Masukan': 'input', 'Tindak lanjut': 'followUp',
+  'Alat AI': 'tool', 'Tujuan': 'purpose', 'Bagian tesis': 'thesisPart', 'Jenis bantuan': 'helpType', 'Bukti': 'evidence',
+  'Jenis': 'attendanceType', 'Judul atau nama penyaji': 'attendanceTitle', 'Email': 'email', 'Nama': 'name', 'Status aktif': 'active'
+};
+const fk_ = function (label) { return { field: LABEL_KEY[label] || label }; };
 
 /** Membungkus objek menjadi respons JSON. */
 function json_(obj) {
@@ -443,10 +468,10 @@ function doPost(e) {
     try {
       body = JSON.parse((e && e.postData && e.postData.contents) || '');
     } catch (err) {
-      throw fail_('VALIDATION', 'Permintaan tidak valid.');
+      throw fail_('VALIDATION', 'Permintaan tidak valid.', 'badRequest');
     }
     if (!body || typeof body.action !== 'string' || !ACTIONS.hasOwnProperty(body.action)) {
-      throw fail_('VALIDATION', 'Aksi tidak dikenal.');
+      throw fail_('VALIDATION', 'Aksi tidak dikenal.', 'unknownAction');
     }
 
     let user = null;
@@ -457,11 +482,11 @@ function doPost(e) {
     hasil = { ok: true, data: ACTIONS[body.action](body, user) || {} };
   } catch (err) {
     if (err.code) {
-      hasil = { ok: false, error: { code: err.code, message: err.message } };
+      hasil = { ok: false, error: { code: err.code, message: err.message, key: err.key || '', params: err.params || {} } };
     } else {
       // Error tak terduga: catat pesannya saja (tanpa isi permintaan, agar PIN/token tidak ikut tercatat)
       console.error('SERVER: ' + err.message);
-      hasil = { ok: false, error: { code: 'SERVER', message: 'Terjadi kesalahan di server. Coba lagi.' } };
+      hasil = { ok: false, error: { code: 'SERVER', message: 'Terjadi kesalahan di server. Coba lagi.', key: 'server', params: {} } };
     }
   }
   return json_(hasil);
@@ -471,7 +496,7 @@ function doPost(e) {
 function authorize_(user, aksi) {
   const boleh = ROLE_RULES[aksi] || [];
   if (boleh.indexOf(user.role) < 0) {
-    throw fail_('FORBIDDEN', 'Kamu tidak punya akses untuk tindakan ini.');
+    throw fail_('FORBIDDEN', 'Kamu tidak punya akses untuk tindakan ini.', 'forbidden');
   }
 }
 
@@ -499,7 +524,7 @@ function createSession_(email, ingat) {
 /** Memeriksa token; mengembalikan {email, name, role} atau menolak dengan AUTH_REQUIRED. */
 function requireSession_(token) {
   if (typeof token !== 'string' || !/^[0-9a-f]{64}$/.test(token)) {
-    throw fail_('AUTH_REQUIRED', 'Sesi tidak ada atau sudah berakhir. Silakan masuk lagi.');
+    throw fail_('AUTH_REQUIRED', 'Sesi tidak ada atau sudah berakhir. Silakan masuk lagi.', 'session');
   }
   const hash = sha256Hex_(token);
   const cache = CacheService.getScriptCache();
@@ -511,10 +536,10 @@ function requireSession_(token) {
 
   const sesi = readRows_('Sessions').filter(function (r) { return r.token_hash === hash; })[0];
   if (!sesi || String(sesi.revoked).toUpperCase() === 'TRUE' || new Date(sesi.expires_at).getTime() <= Date.now()) {
-    throw fail_('AUTH_REQUIRED', 'Sesi tidak ada atau sudah berakhir. Silakan masuk lagi.');
+    throw fail_('AUTH_REQUIRED', 'Sesi tidak ada atau sudah berakhir. Silakan masuk lagi.', 'session');
   }
   const u = findActiveUser_(sesi.email);
-  if (!u) throw fail_('AUTH_REQUIRED', 'Sesi tidak ada atau sudah berakhir. Silakan masuk lagi.');
+  if (!u) throw fail_('AUTH_REQUIRED', 'Sesi tidak ada atau sudah berakhir. Silakan masuk lagi.', 'session');
 
   const user = { email: u.email, name: u.name, role: u.role };
   const exp = new Date(sesi.expires_at).getTime();
@@ -546,7 +571,7 @@ function checkNotLocked_(email) {
   const cache = CacheService.getScriptCache();
   if (Number(cache.get('fail:global') || 0) >= GLOBAL_FAILS ||
       Number(cache.get(failKey_(email)) || 0) >= LOCK_FAILS) {
-    throw fail_('AUTH_LOCKED', 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.');
+    throw fail_('AUTH_LOCKED', 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.', 'locked');
   }
 }
 
@@ -580,7 +605,7 @@ function actLogin_(body) {
     }
     if (!cocok) {
       recordFail_(email);
-      throw fail_('AUTH_INVALID', 'Email atau PIN salah.');
+      throw fail_('AUTH_INVALID', 'Email atau PIN salah.', 'login');
     }
     CacheService.getScriptCache().remove(failKey_(email));
     const sesi = createSession_(email, body.remember === true);
@@ -626,10 +651,10 @@ function actChangePin_(body, user) {
     const u = findActiveUser_(user.email);
     if (!u || !/^\d{6,12}$/.test(pinLama) || !safeEqual_(hashPin_(String(u.salt), pinLama), String(u.pin_hash))) {
       recordFail_(user.email);
-      throw fail_('AUTH_INVALID', 'PIN lama salah.');
+      throw fail_('AUTH_INVALID', 'PIN lama salah.', 'oldPin');
     }
     const salah = validatePin_(pinBaru);
-    if (salah) throw fail_('VALIDATION', salah);
+    if (salah) throw fail_('VALIDATION', salah, pinErrorKey_(salah));
     const salt = Utilities.getUuid();
     updateRow_('Users', u._row, { salt: salt, pin_hash: hashPin_(salt, pinBaru), pin_changed_at: nowIso_() });
   } finally {
@@ -675,29 +700,29 @@ function table_(nama) {
 const V = {
   str: function (v, maks, wajib, label) {
     const t = String(v === undefined || v === null ? '' : v).trim();
-    if (wajib && !t) throw fail_('VALIDATION', label + ' wajib diisi.');
-    if (t.length > maks) throw fail_('VALIDATION', label + ' maksimal ' + maks + ' karakter.');
+    if (wajib && !t) throw fail_('VALIDATION', label + ' wajib diisi.', 'required', fk_(label));
+    if (t.length > maks) throw fail_('VALIDATION', label + ' maksimal ' + maks + ' karakter.', 'tooLong', { field: fk_(label).field, max: maks });
     return t;
   },
   date: function (v, wajib, label) {
     const t = String(v || '').trim();
-    if (!t) { if (wajib) throw fail_('VALIDATION', label + ' wajib diisi.'); return ''; }
+    if (!t) { if (wajib) throw fail_('VALIDATION', label + ' wajib diisi.', 'required', fk_(label)); return ''; }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(t) || isNaN(new Date(t + 'T00:00:00').getTime())) {
-      throw fail_('VALIDATION', label + ' harus berformat YYYY-MM-DD.');
+      throw fail_('VALIDATION', label + ' harus berformat YYYY-MM-DD.', 'dateFormat', fk_(label));
     }
     return t;
   },
   int: function (v, min, maks, label) {
     const n = Number(v);
-    if (!Number.isInteger(n) || n < min || n > maks) throw fail_('VALIDATION', label + ' tidak valid.');
+    if (!Number.isInteger(n) || n < min || n > maks) throw fail_('VALIDATION', label + ' tidak valid.', 'invalid', fk_(label));
     return n;
   },
   oneOf: function (v, daftar, label) {
-    if (daftar.indexOf(v) < 0) throw fail_('VALIDATION', label + ' tidak valid.');
+    if (daftar.indexOf(v) < 0) throw fail_('VALIDATION', label + ' tidak valid.', 'invalid', fk_(label));
     return v;
   },
   bool: function (v, label) {
-    if (typeof v !== 'boolean') throw fail_('VALIDATION', label + ' harus benar atau salah.');
+    if (typeof v !== 'boolean') throw fail_('VALIDATION', label + ' harus benar atau salah.', 'invalid', fk_(label));
     return v;
   }
 };
@@ -710,7 +735,7 @@ function nextId_(nama) {
 /** Mencari baris berdasarkan id; menolak dengan NOT_FOUND bila tidak ada. */
 function findById_(nama, id) {
   const r = readRows_(nama).filter(function (x) { return Number(x.id) === Number(id); })[0];
-  if (!r) throw fail_('NOT_FOUND', 'Data tidak ditemukan. Muat ulang halaman.');
+  if (!r) throw fail_('NOT_FOUND', 'Data tidak ditemukan. Muat ulang halaman.', 'notFound');
   return r;
 }
 
@@ -852,7 +877,7 @@ function actFeedbackUpdate_(b, user) {
   const id = V.int(b.id, 1, 1e6, 'id');
   const lama = findById_('Feedback', id);
   if (user.role !== 'owner' && String(lama.created_by).toLowerCase() !== user.email.toLowerCase()) {
-    throw fail_('FORBIDDEN', 'Kamu hanya bisa mengubah masukan yang kamu tulis.');
+    throw fail_('FORBIDDEN', 'Kamu hanya bisa mengubah masukan yang kamu tulis.', 'ownFeedback');
   }
   const ubah = pick_(b, {
     title: ['title', function (v) { return V.str(v, 200, true, 'Isi masukan'); }],
@@ -874,7 +899,7 @@ const BIMBINGAN_FIELDS = {
 function actBimbinganCreate_(b, user) {
   const obj = pick_(b, BIMBINGAN_FIELDS);
   ['date', 'supervisor', 'mode', 'topic'].forEach(function (k) {
-    if (obj[k] === undefined) throw fail_('VALIDATION', 'Tanggal, pembimbing, cara, dan topik wajib diisi.');
+    if (obj[k] === undefined) throw fail_('VALIDATION', 'Tanggal, pembimbing, cara, dan topik wajib diisi.', 'bimbinganRequired');
   });
   return write_(user, 'bimbingan.create', 'Bimbingan', function () { return insert_('Bimbingan', obj); });
 }
@@ -897,7 +922,7 @@ const AILOG_FIELDS = {
 function actAiLogCreate_(b, user) {
   const obj = pick_(b, AILOG_FIELDS);
   ['date', 'tool', 'purpose', 'help_type'].forEach(function (k) {
-    if (obj[k] === undefined) throw fail_('VALIDATION', 'Tanggal, alat, tujuan, dan jenis bantuan wajib diisi.');
+    if (obj[k] === undefined) throw fail_('VALIDATION', 'Tanggal, alat, tujuan, dan jenis bantuan wajib diisi.', 'ailogRequired');
   });
   return write_(user, 'ailog.create', 'AILog', function () { return insert_('AILog', obj); });
 }
@@ -965,14 +990,14 @@ function actUsersList_() {
 
 function actUsersCreate_(b, user) {
   const email = V.str(b.email, 200, true, 'Email').toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw fail_('VALIDATION', 'Format email tidak valid.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw fail_('VALIDATION', 'Format email tidak valid.', 'emailFormat');
   const nama = V.str(b.name, 100, true, 'Nama');
   const pin = String(b.pin || '');
   const salah = validatePin_(pin);
-  if (salah) throw fail_('VALIDATION', salah);
+  if (salah) throw fail_('VALIDATION', salah, pinErrorKey_(salah));
   return write_(user, 'admin.users.create', 'Users', function () {
     const ada = readRows_('Users').some(function (u) { return String(u.email).toLowerCase() === email; });
-    if (ada) throw fail_('VALIDATION', 'Email ini sudah terdaftar.');
+    if (ada) throw fail_('VALIDATION', 'Email ini sudah terdaftar.', 'emailExists');
     const salt = Utilities.getUuid();
     const sekarang = nowIso_();
     appendRow_('Users', {
@@ -986,10 +1011,10 @@ function actUsersCreate_(b, user) {
 function actUsersSetActive_(b, user) {
   const email = V.str(b.email, 200, true, 'Email').toLowerCase();
   const aktif = V.bool(b.active, 'Status aktif');
-  if (email === user.email.toLowerCase()) throw fail_('VALIDATION', 'Kamu tidak bisa menonaktifkan akunmu sendiri.');
+  if (email === user.email.toLowerCase()) throw fail_('VALIDATION', 'Kamu tidak bisa menonaktifkan akunmu sendiri.', 'selfDeactivate');
   return write_(user, 'admin.users.setActive', 'Users', function () {
     const u = readRows_('Users').filter(function (x) { return String(x.email).toLowerCase() === email; })[0];
-    if (!u) throw fail_('NOT_FOUND', 'Akun tidak ditemukan.');
+    if (!u) throw fail_('NOT_FOUND', 'Akun tidak ditemukan.', 'accountNotFound');
     updateRow_('Users', u._row, { active: aktif ? 'TRUE' : 'FALSE' });
     if (!aktif) revokeSessionsFor_(email);
     return { email: email, active: aktif };
@@ -1000,11 +1025,11 @@ function actUsersResetPin_(b, user) {
   const email = V.str(b.email, 200, true, 'Email').toLowerCase();
   const pin = String(b.newPin || '');
   const salah = validatePin_(pin);
-  if (salah) throw fail_('VALIDATION', salah);
+  if (salah) throw fail_('VALIDATION', salah, pinErrorKey_(salah));
   return write_(user, 'admin.users.resetPin', 'Users', function () {
     const u = readRows_('Users').filter(function (x) { return String(x.email).toLowerCase() === email; })[0];
-    if (!u) throw fail_('NOT_FOUND', 'Akun tidak ditemukan.');
-    if (u.role === 'owner') throw fail_('VALIDATION', 'PIN pemilik diganti lewat halaman Akun atau menu di Sheet.');
+    if (!u) throw fail_('NOT_FOUND', 'Akun tidak ditemukan.', 'accountNotFound');
+    if (u.role === 'owner') throw fail_('VALIDATION', 'PIN pemilik diganti lewat halaman Akun atau menu di Sheet.', 'ownerPinElsewhere');
     const salt = Utilities.getUuid();
     updateRow_('Users', u._row, { salt: salt, pin_hash: hashPin_(salt, pin), pin_changed_at: nowIso_() });
     revokeSessionsFor_(email);

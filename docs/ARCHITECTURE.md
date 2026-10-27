@@ -1,6 +1,6 @@
 # ARCHITECTURE — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.5, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.6, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v1.0 · DESIGN-SYSTEM.md v0.2 · AGENTS.md
 
 ---
@@ -46,6 +46,32 @@ Tiga bagian yang sama jenisnya dengan v1, tetapi semuanya dibangun baru dari nol
 7. `router` dan `init()`
 
 **Aturan render:** semua teks dari data masuk lewat `esc()` atau `textContent`. Tidak ada `innerHTML` yang berisi data mentah.
+
+## 2a. PWA (F20)
+
+| Bagian | Keputusan |
+| --- | --- |
+| `manifest.webmanifest` | `name` "Thesis Tracker", `short_name` "Tracker", `start_url` dan `scope` `./` (relatif, agar benar di subfolder GitHub Pages), `display` standalone, `theme_color` dan `background_color` sesuai `--bg`, ikon 192 dan 512 px plus versi maskable |
+| Ikon | Folder `icons/`: `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png` (180 px), `favicon.png` (32 px) |
+| `index.html` | Tautan manifest, `apple-touch-icon`, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style` (default) |
+| `sw.js` | Menyimpan cangkang aplikasi (`index.html`, `styles.css`, `i18n.js`, `app.js`, manifest, ikon) di cache bernama `tt-<CACHE_VERSION>`. Strategi **network-first** untuk file situs sendiri: selalu coba versi terbaru dari GitHub Pages, pakai cache hanya bila offline. Permintaan ke domain lain (Apps Script, Google Fonts) **tidak disentuh** service worker, sehingga data dan token tidak pernah masuk cache service worker |
+| Pembaruan | `CACHE_VERSION` dinaikkan setiap rilis; cache lama dihapus saat service worker baru aktif (`skipWaiting` + `clients.claim`) |
+| Offline (K10) | Bila "Ingat perangkat ini" dicentang, `app.js` menyimpan salinan hasil `data.bootstrap` (beserta perubahan sesudahnya) di `localStorage` kunci `tt_snapshot`, bersama waktu simpan. Bila `data.bootstrap` gagal karena jaringan dan salinan ada, data itu tampil dalam **mode offline**: penanda offline di atas layar, semua aksi ubah ditolak di sisi tampilan, dan data dimuat ulang otomatis saat koneksi kembali (event `online`). Tanpa salinan, tampil halaman "Sedang offline". Salinan dihapus saat keluar, saat `AUTH_REQUIRED`, dan tidak pernah dibuat bila "Ingat perangkat ini" tidak dicentang. Service worker tetap tidak menyimpan respons Apps Script |
+| Pasang aplikasi | Chrome/Edge/Android: tangkap event `beforeinstallprompt`, tampilkan tombol di halaman Akun. iPhone/iPad: tidak ada event itu, jadi tampilkan petunjuk "Bagikan → Tambahkan ke Layar Utama". Bagian ini disembunyikan bila aplikasi sudah berjalan terpasang (`display-mode: standalone`) |
+| Sesi di aplikasi terpasang | Di iPhone, aplikasi terpasang punya penyimpanan terpisah dari Safari, dan `sessionStorage` hilang saat aplikasi ditutup. Agar tidak masuk ulang setiap kali, pengguna perlu mencentang "Ingat perangkat ini" |
+
+## 2b. Bahasa (F21)
+
+| Bagian | Keputusan |
+| --- | --- |
+| File | `i18n.js`, dimuat sebelum `app.js`: kamus `STR.id` dan `STR.en` dengan kunci yang sama, fungsi `t(kunci, nilai)` untuk menyisipkan angka atau nama, dan `setLang()` |
+| Penyimpanan pilihan | `localStorage` kunci `tt_lang` di perangkat; tidak disimpan di server |
+| Bahasa awal | Sesuai K11 |
+| Tanggal dan angka | `Intl` dengan `id-ID` atau `en-GB` |
+| Error dari server | Respons error ditambah `key` dan `params` (mis. `{code:"VALIDATION", key:"required", params:{field:"title"}}`). Frontend menerjemahkan lewat `t('err.' + key, params)`. Kolom `message` (bahasa Indonesia) tetap dikirim sebagai cadangan. Nama kolom di `params.field` adalah kunci, bukan label, agar label ikut diterjemahkan |
+| Isi data | Teks dari Sheet (judul bab, syarat, catatan) ditampilkan apa adanya (K12) |
+| Ringkasan disalin | Log Bimbingan dan Log AI disalin dalam bahasa antarmuka yang sedang aktif |
+| `<html lang>` | Diperbarui saat bahasa berganti, agar pembaca layar mengucapkan dengan benar |
 
 ## 3. Backend (Apps Script)
 
@@ -185,7 +211,11 @@ Satu tab per tabel. Baris pertama adalah nama kolom. Semua `id` berupa angka bul
 <repo-baru>/
 ├── .nojekyll             ← mematikan pemrosesan Jekyll di GitHub Pages
 ├── index.html
+├── manifest.webmanifest
+├── sw.js
+├── icons/
 ├── styles.css
+├── i18n.js
 ├── app.js
 ├── apps-script/
 │   └── Code.gs           ← salinan backend, tanpa rahasia
@@ -205,6 +235,8 @@ GitHub Pages disajikan dari branch `main`, folder akar (`/`).
 | --- | --- | --- |
 | Apps Script lambat (sering 1–3 detik per panggilan, perlu verifikasi di pemakaian nyata) | Simpan terasa lambat | Status "Menyimpan…" yang jujur; satu `bootstrap` saat masuk, bukan per halaman |
 | Kuota harian Apps Script | Kecil untuk 3 pengguna | Tidak perlu tindakan; dicatat saja |
+| Salinan data offline di perangkat (K10) | Orang lain yang memakai perangkat yang sama bisa membacanya | Hanya dibuat bila "Ingat perangkat ini" dicentang; dihapus saat keluar dan saat sesi berakhir; salinan pembimbing tidak memuat catatan pribadi pemilik |
+| Service worker menyajikan versi lama | Pengguna tidak melihat perbaikan terbaru | Strategi network-first dan `CACHE_VERSION` dinaikkan setiap rilis |
 | Token di `localStorage` bisa dicuri lewat XSS | Akun diambil alih | Semua output di-escape; tanpa library JS dari luar; masa token terbatas; tombol keluar mencabut token |
 | Sheet dibagikan tidak sengaja | Data dan email pembimbing terbuka | Sheet tetap Restricted; hash PIN tidak berguna tanpa `PIN_PEPPER` |
 | `PIN_PEPPER` hilang (mis. proyek Apps Script terhapus) | Tidak ada yang bisa masuk | Tidak perlu cadangan: jalankan `initPepper()` di proyek baru, lalu reset PIN pemilik lewat editor dan PIN pembimbing lewat Kelola Akses |

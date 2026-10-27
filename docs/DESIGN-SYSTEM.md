@@ -1,6 +1,6 @@
 # DESIGN-SYSTEM — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.4, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.5, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v0.5 (K7: struktur ala templat Notion, visual ala Apple)
 
 ---
@@ -165,6 +165,17 @@ HP — Ringkasan                      HP — Sign-in
 | **Empty state** | Ikon 48 px `--label-3`, judul Title 3, satu kalimat Footnote, dan satu tombol aksi bila relevan |
 | **Memuat** | Indikator putar di tengah saat pertama kali; baris kerangka (skeleton) abu-abu untuk daftar |
 
+### Komponen tambahan (PWA dan bahasa)
+
+| Komponen | Spesifikasi |
+| --- | --- |
+| **Ikon aplikasi** | Petak dengan gradasi `--tint` (sama dengan tanda di halaman Masuk) dan simbol toga putih bergaris. Versi maskable: simbol di dalam 80% area tengah. Dibuat sendiri, bukan ikon pihak lain |
+| **Pilihan bahasa (Akun)** | Segmented control "Indonesia / English" di grup "Bahasa" |
+| **Pilihan bahasa (Masuk)** | Tombol teks kecil di bawah form: "English" saat bahasa Indonesia aktif, "Bahasa Indonesia" saat English aktif |
+| **Pasang aplikasi (Akun)** | Grup "Aplikasi": tombol tinted "Pasang aplikasi" bila browser mendukung, atau dua baris petunjuk untuk iPhone/iPad. Disembunyikan saat aplikasi sudah terpasang |
+| **Penanda offline** | Kapsul tetap di atas tengah layar (posisi sama dengan banner sinkronisasi), latar `--surface`, titik `--orange`: "Offline. Menampilkan data per 27 Okt, 10.15". Tombol ubah tetap terlihat tetapi nonaktif; bila diketuk, muncul pesan "Sedang offline. Perubahan bisa dibuat setelah tersambung." |
+| **Halaman offline** | Pola sama dengan halaman gagal memuat: ikon, judul "Sedang offline", satu kalimat, tombol "Coba lagi" |
+
 ## 8. Gerak
 
 - Durasi 250 ms, kurva `cubic-bezier(.25,.1,.25,1)`; sheet 350 ms dengan kurva `cubic-bezier(.32,.72,0,1)`.
@@ -178,6 +189,25 @@ HP — Ringkasan                      HP — Sign-in
 - Pesan gagal masuk selalu "Email atau PIN salah.", tanpa menyebut mana yang salah atau sisa percobaan, agar tidak membocorkan email mana yang terdaftar. Saat terkunci: "Terlalu banyak percobaan. Coba lagi dalam 15 menit."
 - Empty state mengarahkan tindakan. Contoh: "Belum ada masukan terbuka. Masukan baru dari pembimbing akan muncul di sini."
 - Istilah konsisten: Bab, Subbab, Tahap, Masukan, Log Bimbingan, Log AI Disclosure.
+- Versi English mengikuti aturan yang sama: sentence case, kata kerja aktif, error tanpa minta maaf. Padanan istilah tetap:
+
+| Indonesia | English |
+| --- | --- |
+| Ringkasan | Overview |
+| Penulisan | Writing |
+| Bab / Subbab / Tahap | Chapter / Section / Stage |
+| Papan Penulisan | Writing board |
+| Belum mulai / Draf / Revisi / Di pembimbing / Final | Not started / Draft / Revising / With supervisor / Final |
+| Terlambat | Overdue |
+| Masukan / Langkahku | Feedback / My next step |
+| Log Bimbingan / Log AI Disclosure | Supervision log / AI disclosure log |
+| Syarat / Kehadiran | Requirements / Attendance |
+| Bacaan / Linimasa | Readings / Timeline |
+| Kelola Akses / Akun / Lainnya | Access / Account / More |
+| Pemilik / Pembimbing / Penguji Sempro | Owner / Supervisor / Proposal examiner |
+| Hanya baca | Read only |
+| Menyinkronkan… / Tersinkron | Syncing… / Synced |
+| Ingat perangkat ini | Remember this device |
 
 ## 10. Token CSS (acuan untuk kode)
 

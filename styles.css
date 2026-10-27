@@ -422,3 +422,15 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; -webkit-user
 @media (min-width: 1024px) { .sync { left: calc(50% + 130px); } }
 @media (prefers-reduced-motion: reduce) { .sync { transition: none; } }
 .sync [hidden] { display: none !important; }
+
+/* Penanda offline (K10) */
+.offline-pill {
+  position: fixed; z-index: 64; left: 50%; top: calc(env(safe-area-inset-top) + 12px); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px; max-width: calc(100% - 32px);
+  padding: 8px 14px; border-radius: var(--r-full); font-size: 13px; line-height: 18px;
+  background: var(--surface); border: var(--hair) solid var(--separator); box-shadow: 0 6px 18px rgba(0,0,0,.1);
+}
+.offline-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+.main.is-offline { padding-top: calc(env(safe-area-inset-top) + 64px); }
+@media (min-width: 1024px) { .offline-pill { left: calc(50% + 130px); } }
+.lang-switch { font-size: 15px; font-weight: 500; }

@@ -1,6 +1,6 @@
 # AGENTS — Aturan kerja untuk asisten AI di repo ini
 
-**Status:** v1.2, 27 Oktober 2026
+**Status:** v1.3, 27 Oktober 2026
 
 File ini dibaca oleh asisten AI (Claude, Codex, dan sejenisnya) sebelum menyentuh kode di repo ini. Isinya: apa proyek ini, bagaimana cara bekerja dengan pemiliknya, dan aturan yang tidak boleh dilanggar.
 
@@ -55,6 +55,9 @@ Pemilik baru belajar coding dan memakai macOS.
 - "Tersimpan" hanya ditampilkan setelah `api.call` berhasil. Bila gagal, kembalikan tampilan ke keadaan sebelumnya dan tampilkan pesan.
 - Tidak memakai `alert()`, `confirm()`, atau `prompt()`; gunakan banner dan sheet dari DESIGN-SYSTEM.
 - Komentar kode dalam Bahasa Indonesia sederhana, menjelaskan *mengapa*, bukan mengulang *apa*.
+- **Tidak ada teks antarmuka yang ditulis langsung di kode.** Semua teks lewat `t('kunci')` dari `i18n.js`, dan setiap kunci baru wajib ada di `STR.id` dan `STR.en`.
+- **Service worker tidak boleh menyentuh permintaan ke domain lain** (Apps Script, Google Fonts). Data dan token tidak pernah masuk cache.
+- **Setiap rilis menaikkan `CACHE_VERSION` di `sw.js`**, agar aplikasi terpasang memuat versi baru.
 
 ### Backend (`apps-script/Code.gs`)
 
@@ -79,6 +82,8 @@ Sebelum menyatakan sebuah langkah selesai, pastikan:
 - [ ] Bila menyentuh hak akses: diuji dengan akun pemilik dan akun pembimbing
 - [ ] Bila menyentuh backend: diuji dengan permintaan tanpa token dan dengan token pembimbing, dan keduanya ditolak bila memang tidak berhak
 - [ ] Tidak ada rahasia atau data pribadi yang masuk ke commit
+- [ ] Diperiksa dalam bahasa Indonesia dan English
+- [ ] Bila menyentuh `sw.js` atau file baru: `CACHE_VERSION` naik dan file baru masuk daftar cache
 - [ ] Dokumen di `docs/` diperbarui bila ada keputusan yang berubah
 
 ## 6. Cara menerbitkan perubahan

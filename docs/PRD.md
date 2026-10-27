@@ -1,6 +1,6 @@
 # PRD — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.2, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.3, 27 Oktober 2026
 **v1 (lama):** https://afyancho.github.io/thesis-tracker/ · **v2:** dibangun dari nol di repo GitHub baru (alamat menyusul)
 
 ---
@@ -67,6 +67,8 @@ Prioritas: **W** = wajib di rilis pertama, **S** = sebaiknya ada, **O** = opsion
 | F12 | (digabung ke F16) | Catatan pembimbing kini dicatat sebagai Masukan | – |
 | F18 | Ganti PIN | Setiap pengguna dapat mengganti PIN-nya sendiri, sehingga PIN awal yang dibuatkan pemilik untuk pembimbing tidak perlu dipakai seterusnya | S |
 | F19 | Banner sinkronisasi | Di semua halaman, setiap perubahan yang dikirim ke server (pindah kartu, centang, simpan formulir, hapus, kelola akses) memunculkan banner dengan cincin progres dan persen 0–100% (lihat K9) | W |
+| F20 | Aplikasi terpasang (PWA) | Tracker bisa dipasang di layar utama HP dan laptop: ikon sendiri, terbuka layar penuh tanpa bilah browser, cepat terbuka karena tampilan disimpan di perangkat. Saat offline, aplikasi tetap terbuka dan menampilkan pesan yang jelas beserta tombol coba lagi. Halaman Akun berisi tombol "Pasang aplikasi" (Chrome/Edge/Android) atau petunjuk "Bagikan → Tambahkan ke Layar Utama" (iPhone/iPad) | W |
+| F21 | Pilihan bahasa (Indonesia / English) | Semua teks antarmuka, pesan error (termasuk dari server), format tanggal, dan ringkasan yang disalin mengikuti bahasa terpilih. Pilihan ada di halaman Masuk dan halaman Akun, dan disimpan di perangkat. Isi data dari Sheet tidak diterjemahkan (lihat K12) | W |
 
 ### Modul Penulisan
 
@@ -111,6 +113,7 @@ Struktur modul ini terinspirasi templat Notion "Dissertation & Thesis Tracker" (
 - Pendaftaran akun mandiri (sign-up terbuka); semua akun dibuat pemilik lewat daftar izin.
 - Sinkronisasi otomatis dengan SMILE Tazkia.
 - Fitur yang menulis naskah tesis.
+- Notifikasi push dan mengubah data saat offline (antrean perubahan offline).
 
 ## 6. Kebutuhan non-fungsional
 
@@ -144,6 +147,9 @@ Setelah v2 dipakai, deployment Apps Script v1 dimatikan dan `PIN_RAHASIA` dihapu
 | K6 | Bagian yang dilihat pembimbing | Lihat: Dashboard, Bab, Subbab, Papan Penulisan, Masukan, Linimasa, Checklist Syarat, Log Bimbingan, Bacaan Wajib, Log AI Disclosure. Tidak lihat: catatan pribadi task, Prompt Library, Kelola Akses | **Disetujui 26 Okt 2026** |
 | K8 | Cara membangun | Dari nol: repo GitHub baru, Google Sheet baru, proyek Apps Script baru. v1 tidak diubah dan dimatikan setelah v2 dipakai | **Diputuskan 26 Okt 2026** |
 | K9 | Persen di banner sinkronisasi | Persen perkiraan yang naik halus sampai sekitar 90% selama menunggu, lalu 100% hanya setelah server membalas sukses (pilihan pemilik; versi "persen dari jumlah proses" tidak dipilih) | **Diputuskan 27 Okt 2026** |
+| K10 | Data tracker saat offline | Disimpan sebagai **salinan baca-saja** di perangkat, hanya bila "Ingat perangkat ini" dicentang. Salinan diperbarui setiap kali data dimuat atau diubah, dan dihapus saat keluar, saat sesi berakhir, atau saat akun dinonaktifkan. Saat offline, data terakhir tampil dengan penanda offline dan semua tombol ubah dinonaktifkan | **Diputuskan 27 Okt 2026** |
+| K11 | Bahasa saat pertama dibuka | Mengikuti bahasa perangkat: Indonesia bila perangkat berbahasa Indonesia, selain itu English. Setelah dipilih manual, pilihan itu yang dipakai | **Diputuskan 27 Okt 2026** |
+| K12 | Isi bawaan (judul bab, syarat, milestone) | Tetap bahasa Indonesia sesuai Panduan Tesis Tazkia; yang diterjemahkan hanya antarmuka | **Diputuskan 27 Okt 2026** |
 | K7 | Arah tampilan | Struktur informasi mengikuti templat Notion (bab, subbab, masukan, tampilan tersaring); bahasa visual mengikuti gaya Apple (lihat DESIGN-SYSTEM.md) | **Diputuskan 26 Okt 2026** |
 
 ## 9. Kriteria penerimaan rilis pertama
@@ -162,6 +168,13 @@ Setelah v2 dipakai, deployment Apps Script v1 dimatikan dan `PIN_RAHASIA` dihapu
 - [ ] Akun pembimbing dapat membuat Masukan, tetapi tidak dapat mengubah tahap subbab
 - [ ] Kartu yang diseret ke kolom lain tersimpan setelah server membalas; bila gagal, kartu kembali ke kolom asal disertai pesan
 - [ ] Setiap perubahan memunculkan banner sinkronisasi; 100% dan "Tersinkron" hanya muncul setelah server membalas sukses; bila koneksi putus, banner merah dengan tombol "Coba lagi" yang benar-benar mengirim ulang
+- [ ] Bisa dipasang di Chrome (laptop/Android) dan di iPhone lewat "Tambahkan ke Layar Utama"; terbuka layar penuh dengan ikon tracker
+- [ ] Dalam mode pesawat, aplikasi terpasang tetap terbuka: dengan "Ingat perangkat ini", data terakhir tampil dengan penanda offline dan tombol ubah nonaktif; tanpa itu, tampil pesan offline (bukan halaman kosong atau error browser)
+- [ ] Setelah keluar, salinan data di perangkat terhapus (dicek di penyimpanan browser)
+- [ ] Setelah versi baru di-push, aplikasi terpasang memakai versi baru paling lambat pada pembukaan kedua
+- [ ] Respons dari Apps Script (data dan token) tidak pernah tersimpan di cache service worker
+- [ ] Dalam mode English, tidak ada teks antarmuka berbahasa Indonesia yang tersisa (di luar isi data dari Sheet), termasuk pesan error dari server dan banner sinkronisasi
+- [ ] Pilihan bahasa tetap setelah aplikasi ditutup dan dibuka lagi
 - [ ] Penghitung bimbingan dan kehadiran Sempro sesuai jumlah baris log
 
 ---
