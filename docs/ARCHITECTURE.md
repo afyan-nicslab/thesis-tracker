@@ -1,6 +1,6 @@
 # ARCHITECTURE — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.4, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.5, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v1.0 · DESIGN-SYSTEM.md v0.2 · AGENTS.md
 
 ---
@@ -112,13 +112,15 @@ Semua aksi lewat `doPost`, dengan body `{action, token, ...}` (`auth.login` tanp
 | `auth.login` | `email, pin, remember` | `token, expiresAt, user{email, name, role}` |
 | `auth.logout` | – | `{}` |
 | `auth.changePin` | `oldPin, newPin` | `{}` |
-| `data.bootstrap` | – | Semua tabel yang boleh dilihat peran tersebut |
+| `auth.me` | – | `user` pemilik sesi |
+| `data.bootstrap` | – | Semua tabel yang boleh dilihat peran tersebut, ditambah `supervisors` (nama pembimbing aktif, tanpa email) |
+| `milestone.update` | `id, status?, date?` | Baris yang diperbarui |
 | `task.update` | `id, done?, note?` | Baris yang diperbarui |
 | `reading.update` | `id, done?, verifyStatus?, note?` | Baris yang diperbarui |
 | `chapter.update` | `id, targetDate?` | Baris yang diperbarui |
 | `section.update` | `id, stage?, dueDate?, words?` | Baris yang diperbarui |
-| `feedback.create` | `title, chapterId, from, receivedAt, action?, bimbinganId?` | Baris baru |
-| `feedback.update` | `id, status?, action?, title?` | Baris yang diperbarui |
+| `feedback.create` | `title, chapterId, from, receivedAt, nextStep?, bimbinganId?` | Baris baru |
+| `feedback.update` | `id, status?, nextStep?, title?` | Baris yang diperbarui (`nextStep` disimpan di kolom `action`; nama `action` di body sudah dipakai untuk nama aksi API) |
 | `bimbingan.create` / `.update` | `date, supervisor, mode, topic, input, followUp` | Baris baru / diperbarui |
 | `ailog.create` / `.update` | `date, tool, purpose, thesisPart, helpType, note` | Baris baru / diperbarui |
 | `requirement.update` | `id, done, evidence?` | Baris yang diperbarui |
@@ -172,10 +174,16 @@ Satu tab per tabel. Baris pertama adalah nama kolom. Semua `id` berupa angka bul
 - Baris dicari lewat `id`, tidak pernah lewat nomor baris atau judul.
 - Isi (judul task, bacaan, subbab, linimasa, prompt) diubah langsung di Sheet oleh pemilik. Perubahan tampil setelah halaman dimuat ulang.
 
+## 6a. Isi awal
+
+- Fungsi editor `seedStructure()` mengisi tab Chapters, Sections, Milestones, dan Requirements dari Panduan Tesis Tazkia 2025, hanya bila tab itu masih kosong.
+- Daftar bacaan diimpor dari file CSV lewat File → Import di Google Sheet, tidak lewat kode, karena repo publik tidak boleh memuat daftar bacaan pribadi.
+
 ## 7. Struktur repo
 
 ```
 <repo-baru>/
+├── .nojekyll             ← mematikan pemrosesan Jekyll di GitHub Pages
 ├── index.html
 ├── styles.css
 ├── app.js

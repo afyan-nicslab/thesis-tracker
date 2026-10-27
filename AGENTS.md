@@ -1,6 +1,6 @@
 # AGENTS — Aturan kerja untuk asisten AI di repo ini
 
-**Status:** v1.1, 26 Oktober 2026
+**Status:** v1.2, 27 Oktober 2026
 
 File ini dibaca oleh asisten AI (Claude, Codex, dan sejenisnya) sebelum menyentuh kode di repo ini. Isinya: apa proyek ini, bagaimana cara bekerja dengan pemiliknya, dan aturan yang tidak boleh dilanggar.
 
@@ -91,7 +91,7 @@ Sebelum menyatakan sebuah langkah selesai, pastikan:
 
 ## 7. Rencana pembangunan
 
-Dikerjakan berurutan. Setiap tahap dipecah lagi menjadi langkah kecil saat dikerjakan.
+Dikerjakan berurutan. Setiap tahap dipecah lagi menjadi langkah kecil saat dikerjakan. Atas keputusan pemilik (27 Okt 2026), Tahap 4–10 dibangun sebagai satu paket; pengujiannya tetap mengikuti kolom "Selesai bila" per tahap.
 
 | Tahap | Isi | Selesai bila |
 | --- | --- | --- |
