@@ -434,3 +434,19 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; -webkit-user
 .main.is-offline { padding-top: calc(env(safe-area-inset-top) + 64px); }
 @media (min-width: 1024px) { .offline-pill { left: calc(50% + 130px); } }
 .lang-switch { font-size: 15px; font-weight: 500; }
+
+/* Deskripsi dan tautan dokumen (F22) */
+.link-chip {
+  display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--tint) 15%, transparent); color: var(--tint-text); font-size: 12px; font-weight: 600;
+  max-width: 100%; overflow: hidden; white-space: nowrap;
+}
+.link-chip svg { width: 14px; height: 14px; flex-shrink: 0; }
+.link-chip span { overflow: hidden; text-overflow: ellipsis; }
+.card-desc { margin-top: 6px; }
+.card-link { margin-top: 8px; }
+.ch-desc { margin: -8px 0 14px; color: var(--label-2); }
+.sec-row { padding: 0 16px 0 0; gap: 8px; }
+.sec-row .row-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 11px 0 11px 16px; background: none; border: 0; text-align: left; color: inherit; }
+button.row-main:active { background: var(--fill); }
+.link-icon { color: var(--tint-text); background: color-mix(in srgb, var(--tint) 15%, transparent); text-decoration: none; }

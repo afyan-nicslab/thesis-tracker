@@ -1,6 +1,6 @@
 # DESIGN-SYSTEM — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.5, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.6, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v0.5 (K7: struktur ala templat Notion, visual ala Apple)
 
 ---
@@ -174,6 +174,8 @@ HP — Ringkasan                      HP — Sign-in
 | **Pilihan bahasa (Masuk)** | Tombol teks kecil di bawah form: "English" saat bahasa Indonesia aktif, "Bahasa Indonesia" saat English aktif |
 | **Pasang aplikasi (Akun)** | Grup "Aplikasi": tombol tinted "Pasang aplikasi" bila browser mendukung, atau dua baris petunjuk untuk iPhone/iPad. Disembunyikan saat aplikasi sudah terpasang |
 | **Penanda offline** | Kapsul tetap di atas tengah layar (posisi sama dengan banner sinkronisasi), latar `--surface`, titik `--orange`: "Offline. Menampilkan data per 27 Okt, 10.15". Tombol ubah tetap terlihat tetapi nonaktif; bila diketuk, muncul pesan "Sedang offline. Perubahan bisa dibuat setelah tersambung." |
+| **Tautan dokumen** | Tombol kapsul kecil: ikon tautan + nama sumber ("Google Docs", "Dropbox", "OneDrive", "Overleaf", atau nama domain), latar `--tint` 15%, teks `--tint-text`, tinggi 26 px. Di detail bab tampil sebagai tombol tinted "Buka dokumen". Di daftar subbab tampil sebagai ikon tautan di sebelah kapsul tahap |
+| **Deskripsi** | Teks Footnote `--label-2`. Di kartu Papan dipotong 2 baris; di detail bab tampil penuh di bawah judul |
 | **Halaman offline** | Pola sama dengan halaman gagal memuat: ikon, judul "Sedang offline", satu kalimat, tombol "Coba lagi" |
 
 ## 8. Gerak

@@ -1,6 +1,6 @@
 # ARCHITECTURE — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.6, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.7, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v1.0 · DESIGN-SYSTEM.md v0.2 · AGENTS.md
 
 ---
@@ -143,8 +143,8 @@ Semua aksi lewat `doPost`, dengan body `{action, token, ...}` (`auth.login` tanp
 | `milestone.update` | `id, status?, date?` | Baris yang diperbarui |
 | `task.update` | `id, done?, note?` | Baris yang diperbarui |
 | `reading.update` | `id, done?, verifyStatus?, note?` | Baris yang diperbarui |
-| `chapter.update` | `id, targetDate?` | Baris yang diperbarui |
-| `section.update` | `id, stage?, dueDate?, words?` | Baris yang diperbarui |
+| `chapter.update` | `id, targetDate?, desc?, link?` | Baris yang diperbarui |
+| `section.update` | `id, stage?, dueDate?, words?, desc?, link?` | Baris yang diperbarui |
 | `feedback.create` | `title, chapterId, from, receivedAt, nextStep?, bimbinganId?` | Baris baru |
 | `feedback.update` | `id, status?, nextStep?, title?` | Baris yang diperbarui (`nextStep` disimpan di kolom `action`; nama `action` di body sudah dipakai untuk nama aksi API) |
 | `bimbingan.create` / `.update` | `date, supervisor, mode, topic, input, followUp` | Baris baru / diperbarui |
@@ -181,8 +181,8 @@ Satu tab per tabel. Baris pertama adalah nama kolom. Semua `id` berupa angka bul
 | `Phases` | id, name, focus, color, order |
 | `Tasks` | id, phase_id, title, desc, duration, tags, order, done, note, updated_at |
 | `Readings` | id, title, author, type, order, done, verify_status, note, updated_at |
-| `Chapters` | id, doc (`CN`/`PROP`/`TESIS`), number, title, target_date, order |
-| `Sections` | id, chapter_id, number, title, stage (0–4), due_date, words, updated_at |
+| `Chapters` | id, doc (`CN`/`PROP`/`TESIS`), number, title, target_date, order, desc, link |
+| `Sections` | id, chapter_id, number, title, stage (0–4), due_date, words, updated_at, desc, link |
 | `Feedback` | id, title, chapter_id, from (`P1`/`P2`/`PENGUJI`), received_at, status (`open`/`doing`/`done`), action, bimbingan_id, created_by, updated_at |
 | `Bimbingan` | id, date, supervisor (`P1`/`P2`), mode, topic, input, follow_up, created_at |
 | `AILog` | id, date, tool, purpose, thesis_part, help_type, note, created_at |
@@ -192,6 +192,15 @@ Satu tab per tabel. Baris pertama adalah nama kolom. Semua `id` berupa angka bul
 | `Timeline` | id, month, title, desc, order |
 | `Prompts` | id, title, category, body, order |
 | `Audit` | ts, email, action, entity, entity_id |
+
+**Kolom baru di tab yang sudah ada**
+
+Kolom baru selalu ditambahkan di **ujung kanan** tab. `setupSheet()` mengenali tab yang judul kolomnya sama dengan awal skema, lalu menambahkan kolom yang kurang tanpa menyentuh data. Bila urutan judul kolom berbeda dari skema, tab tidak diubah dan muncul peringatan di log.
+
+**Tautan dokumen (F22)**
+
+- Diterima hanya bila `new URL()` valid dan protokolnya `https:`; maksimal 2.000 karakter. Dicek di tampilan dan di server.
+- Ditampilkan dengan `target="_blank" rel="noopener noreferrer"`. Label sumber (Google Docs, Dropbox, dan seterusnya) diturunkan dari nama domain, bukan dari isian pengguna.
 
 **Aturan penulisan ke Sheet**
 

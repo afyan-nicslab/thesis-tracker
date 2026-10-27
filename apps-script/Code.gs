@@ -16,8 +16,8 @@ const SCHEMA = {
   Phases:       ['id', 'name', 'focus', 'color', 'order'],
   Tasks:        ['id', 'phase_id', 'title', 'desc', 'duration', 'tags', 'order', 'done', 'note', 'updated_at'],
   Readings:     ['id', 'title', 'author', 'type', 'order', 'done', 'verify_status', 'note', 'updated_at'],
-  Chapters:     ['id', 'doc', 'number', 'title', 'target_date', 'order'],
-  Sections:     ['id', 'chapter_id', 'number', 'title', 'stage', 'due_date', 'words', 'updated_at'],
+  Chapters:     ['id', 'doc', 'number', 'title', 'target_date', 'order', 'desc', 'link'],
+  Sections:     ['id', 'chapter_id', 'number', 'title', 'stage', 'due_date', 'words', 'updated_at', 'desc', 'link'],
   Feedback:     ['id', 'title', 'chapter_id', 'from', 'received_at', 'status', 'action', 'bimbingan_id', 'created_by', 'updated_at'],
   Bimbingan:    ['id', 'date', 'supervisor', 'mode', 'topic', 'input', 'follow_up', 'created_at'],
   AILog:        ['id', 'date', 'tool', 'purpose', 'thesis_part', 'help_type', 'note', 'created_at'],
@@ -65,12 +65,18 @@ function setupSheet() {
       sh.insertColumnsAfter(sh.getMaxColumns(), kolom.length - sh.getMaxColumns());
     }
 
-    // Tulis judul kolom hanya bila baris 1 masih kosong
+    // Tulis judul kolom bila baris 1 masih kosong. Bila tab lama hanya kurang kolom
+    // di ujung kanan (skema bertambah), tambahkan kolom itu tanpa menyentuh data.
     const header = sh.getRange(1, 1, 1, kolom.length);
     const lama = header.getValues()[0];
-    const kosong = lama.every(function (v) { return v === ''; });
+    const terisi = lama.filter(function (v) { return v !== ''; });
+    const kosong = terisi.length === 0;
+    const awalSama = terisi.every(function (v, i) { return v === kolom[i]; }) && lama.slice(terisi.length).every(function (v) { return v === ''; });
     if (kosong) {
       header.setValues([kolom]);
+    } else if (awalSama && terisi.length < kolom.length) {
+      header.setValues([kolom]);
+      laporan.push('  Kolom baru di ' + nama + ': ' + kolom.slice(terisi.length).join(', '));
     } else if (lama.join('|') !== kolom.join('|')) {
       laporan.push('  PERINGATAN: judul kolom tab ' + nama + ' berbeda dari skema; tidak diubah.');
     }
@@ -358,7 +364,7 @@ function menuResetOwnerPin() {
 // API WEB: pintu masuk, respons, dan error
 // Acuan: docs/ARCHITECTURE.md bagian 3–5
 // ============================================================
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 const SESSION_HOURS = 12;        // sesi biasa
 const REMEMBER_DAYS = 30;        // sesi "Ingat perangkat ini"
 const LOCK_FAILS = 5;            // salah PIN per akun sebelum terkunci
@@ -446,7 +452,8 @@ const LABEL_KEY = {
   'Dari': 'from', 'Tanggal diterima': 'receivedAt', 'Langkahku': 'nextStep', 'Log bimbingan': 'bimbingan', 'Tanggal': 'date',
   'Pembimbing': 'supervisor', 'Cara bimbingan': 'mode', 'Topik': 'topic', 'Masukan': 'input', 'Tindak lanjut': 'followUp',
   'Alat AI': 'tool', 'Tujuan': 'purpose', 'Bagian tesis': 'thesisPart', 'Jenis bantuan': 'helpType', 'Bukti': 'evidence',
-  'Jenis': 'attendanceType', 'Judul atau nama penyaji': 'attendanceTitle', 'Email': 'email', 'Nama': 'name', 'Status aktif': 'active'
+  'Jenis': 'attendanceType', 'Judul atau nama penyaji': 'attendanceTitle', 'Email': 'email', 'Nama': 'name', 'Status aktif': 'active',
+  'Deskripsi': 'desc', 'Tautan dokumen': 'link'
 };
 const fk_ = function (label) { return { field: LABEL_KEY[label] || label }; };
 
@@ -721,6 +728,14 @@ const V = {
     if (daftar.indexOf(v) < 0) throw fail_('VALIDATION', label + ' tidak valid.', 'invalid', fk_(label));
     return v;
   },
+  /** Hanya alamat https:// yang valid; kosong diperbolehkan. */
+  url: function (v, label) {
+    const t = String(v === undefined || v === null ? '' : v).trim();
+    if (!t) return '';
+    if (t.length > 2000) throw fail_('VALIDATION', label + ' maksimal 2000 karakter.', 'tooLong', { field: fk_(label).field, max: 2000 });
+    if (!/^https:\/\/[^\s<>"']+$/i.test(t)) throw fail_('VALIDATION', label + ' harus diawali https://', 'urlFormat', fk_(label));
+    return t;
+  },
   bool: function (v, label) {
     if (typeof v !== 'boolean') throw fail_('VALIDATION', label + ' harus benar atau salah.', 'invalid', fk_(label));
     return v;
@@ -844,7 +859,11 @@ function actReadingUpdate_(b, user) {
 
 function actChapterUpdate_(b, user) {
   const id = V.int(b.id, 1, 1e6, 'id');
-  const ubah = pick_(b, { targetDate: ['target_date', function (v) { return V.date(v, false, 'Tanggal target'); }] });
+  const ubah = pick_(b, {
+    targetDate: ['target_date', function (v) { return V.date(v, false, 'Tanggal target'); }],
+    desc: ['desc', function (v) { return V.str(v, 1000, false, 'Deskripsi'); }],
+    link: ['link', function (v) { return V.url(v, 'Tautan dokumen'); }]
+  });
   return write_(user, 'chapter.update', 'Chapters', function () { return updateById_('Chapters', id, ubah); });
 }
 
@@ -853,7 +872,9 @@ function actSectionUpdate_(b, user) {
   const ubah = pick_(b, {
     stage: ['stage', function (v) { return V.oneOf(Number(v), STAGES, 'Tahap'); }],
     dueDate: ['due_date', function (v) { return V.date(v, false, 'Tenggat'); }],
-    words: ['words', function (v) { return v === '' || v === null ? '' : V.int(v, 0, 1e6, 'Jumlah kata'); }]
+    words: ['words', function (v) { return v === '' || v === null ? '' : V.int(v, 0, 1e6, 'Jumlah kata'); }],
+    desc: ['desc', function (v) { return V.str(v, 1000, false, 'Deskripsi'); }],
+    link: ['link', function (v) { return V.url(v, 'Tautan dokumen'); }]
   });
   return write_(user, 'section.update', 'Sections', function () { return updateById_('Sections', id, ubah); });
 }

@@ -47,7 +47,7 @@ const STR = {
     'ch.targetRel': 'Target {date}, {rel}', 'ch.noTarget': 'Belum ada tanggal target', 'ch.notSet': 'Belum diatur',
     'ch.finalCount': '{n} dari {total} subbab final', 'ch.openFb': '{n} masukan terbuka',
     'ch.empty': 'Belum ada bab', 'ch.emptyText': 'Jalankan seedStructure() di editor Apps Script untuk mengisi bab dan subbab dari Panduan Tesis.',
-    'ch.sections': 'Subbab', 'ch.sectionsHint': 'Ketuk subbab untuk mengubah tahap, tenggat, atau jumlah kata.',
+    'ch.sections': 'Subbab', 'ch.sectionsHint': 'Ketuk subbab untuk mengubah tahap, tenggat, jumlah kata, deskripsi, atau tautan dokumen.',
     'ch.feedback': 'Masukan untuk bab ini', 'ch.noFeedback': 'Belum ada masukan.',
     'sec.due': 'Tenggat {date}, {rel}', 'sec.words': '{n} kata',
 
@@ -131,6 +131,11 @@ const STR = {
     'field.followUp': 'Tindak lanjut', 'field.tool': 'Alat AI', 'field.purpose': 'Tujuan', 'field.thesisPart': 'Bagian tesis', 'field.helpType': 'Jenis bantuan',
     'field.evidence': 'Bukti', 'field.attendanceType': 'Jenis', 'field.attendanceTitle': 'Judul atau nama penyaji', 'field.email': 'Email', 'field.name': 'Nama',
     'field.active': 'Status aktif',
+    'field.desc': 'Deskripsi', 'field.link': 'Tautan dokumen',
+    'link.open': 'Buka di {src}', 'link.none': 'Belum ada', 'link.placeholder': 'https://docs.google.com/…',
+    'link.hint': 'Tempel alamat dokumen (Google Docs, Drive, Dropbox, OneDrive, Overleaf). Harus diawali https://. Pastikan pembimbing diberi akses di layanan itu.',
+    'ch.editDetails': 'Ubah detail bab', 'ch.descPh': 'mis. Fokus Bab I: latar belakang transmisi moneter syariah', 'sec.descPh': 'mis. Tambah data 2025 dan rapikan tabel 1.1',
+    'err.urlFormat': '{field} harus berupa alamat yang diawali https://',
 
     'err.network': 'Tidak bisa terhubung ke server. Periksa koneksi, lalu coba lagi.', 'err.server': 'Terjadi kesalahan di server. Coba lagi.',
     'err.generic': 'Terjadi kesalahan. Coba lagi.', 'err.saveFailed': 'Gagal menyimpan. Coba lagi.',
@@ -190,7 +195,7 @@ const STR = {
     'ch.targetRel': 'Target {date}, {rel}', 'ch.noTarget': 'No target date', 'ch.notSet': 'Not set',
     'ch.finalCount': '{n} of {total} sections final', 'ch.openFb': '{n} open feedback',
     'ch.empty': 'No chapters yet', 'ch.emptyText': 'Run seedStructure() in the Apps Script editor to fill in chapters and sections from the thesis guide.',
-    'ch.sections': 'Sections', 'ch.sectionsHint': 'Tap a section to change its stage, due date, or word count.',
+    'ch.sections': 'Sections', 'ch.sectionsHint': 'Tap a section to change its stage, due date, word count, description, or document link.',
     'ch.feedback': 'Feedback on this chapter', 'ch.noFeedback': 'No feedback yet.',
     'sec.due': 'Due {date}, {rel}', 'sec.words': '{n} words',
 
@@ -274,6 +279,11 @@ const STR = {
     'field.followUp': 'Follow-up', 'field.tool': 'AI tool', 'field.purpose': 'Purpose', 'field.thesisPart': 'Thesis part', 'field.helpType': 'Type of help',
     'field.evidence': 'Evidence', 'field.attendanceType': 'Type', 'field.attendanceTitle': 'Title or presenter', 'field.email': 'Email', 'field.name': 'Name',
     'field.active': 'Active status',
+    'field.desc': 'Description', 'field.link': 'Document link',
+    'link.open': 'Open in {src}', 'link.none': 'None yet', 'link.placeholder': 'https://docs.google.com/…',
+    'link.hint': 'Paste the document address (Google Docs, Drive, Dropbox, OneDrive, Overleaf). It must start with https://. Make sure supervisors have access in that service.',
+    'ch.editDetails': 'Edit chapter details', 'ch.descPh': 'e.g. Chapter I focus: background on Islamic monetary transmission', 'sec.descPh': 'e.g. Add 2025 data and tidy up table 1.1',
+    'err.urlFormat': '{field} must be an address starting with https://',
 
     'err.network': 'Can’t reach the server. Check your connection, then try again.', 'err.server': 'Something went wrong on the server. Try again.',
     'err.generic': 'Something went wrong. Try again.', 'err.saveFailed': 'Couldn’t save. Try again.',

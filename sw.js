@@ -3,7 +3,7 @@
    - Network-first untuk file situs sendiri: versi terbaru dari GitHub Pages selalu didahulukan.
    - Permintaan ke domain lain (Apps Script, Google Fonts) TIDAK disentuh: data dan token tidak pernah masuk cache.
    Naikkan CACHE_VERSION setiap rilis. */
-const CACHE_VERSION = '2.1.0';
+const CACHE_VERSION = '2.2.0';
 const CACHE = 'tt-' + CACHE_VERSION;
 const SHELL = [
   './', 'index.html', 'styles.css', 'i18n.js', 'app.js', 'manifest.webmanifest',

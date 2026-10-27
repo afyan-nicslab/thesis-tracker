@@ -10,7 +10,7 @@
    ========================================================= */
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbxzzjxSbVnCuCAVUy1zWdDUcuMh2ovlZeZKrsrHImHOQiAe1juPd-rvFE7s_LUSQe4/exec',
-  VERSION: '2.1.0',
+  VERSION: '2.2.0',
   TZ: 'Asia/Jakarta'
 };
 
@@ -65,6 +65,25 @@ function relDays(ymd) {
   return n > 0 ? t('rel.in', { n: n }) : t('rel.ago', { n: Math.abs(n) });
 }
 const fmtNum = (n) => Number(n).toLocaleString(LOCALE());
+
+/** Mengembalikan alamat bila valid dan https://, selain itu '' (F22). */
+function safeUrl(u) {
+  const s = String(u || '').trim();
+  if (!/^https:\/\/[^\s<>"']+$/i.test(s)) return '';
+  try { return new URL(s).protocol === 'https:' ? s : ''; } catch (e) { return ''; }
+}
+/** Nama sumber dokumen dari nama domain (bukan dari isian pengguna). */
+function linkSource(u) {
+  let h = '';
+  try { h = new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
+  if (h === 'docs.google.com') return 'Google Docs';
+  if (h === 'drive.google.com') return 'Google Drive';
+  if (/(^|\.)dropbox\.com$/.test(h)) return 'Dropbox';
+  if (/(^|\.)onedrive\.live\.com$|^1drv\.ms$|(^|\.)sharepoint\.com$/.test(h)) return 'OneDrive';
+  if (/(^|\.)overleaf\.com$/.test(h)) return 'Overleaf';
+  if (/(^|\.)notion\.(so|site)$/.test(h)) return 'Notion';
+  return h;
+}
 function firstName(name) { return String(name || '').trim().split(/\s+/)[0] || ''; }
 
 /** Menyalin teks ke clipboard; mengembalikan true bila berhasil. */
@@ -296,6 +315,7 @@ const ICON_PATHS = {
   user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
   inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1Z"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
   grad: '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>'
 };
 function icon(name, cls) {
@@ -319,6 +339,15 @@ function group(label, inner, foot) {
 function emptyState(ic, title, text, action) {
   return '<div class="empty">' + icon(ic) + '<h2 class="t-3">' + esc(title) + '</h2><p class="t-foot muted">' + esc(text) + '</p>' + (action || '') + '</div>';
 }
+/** Tombol kapsul tautan dokumen (F22). Kosong bila alamat tidak aman. */
+function linkChip(u, big) {
+  const url = safeUrl(u);
+  if (!url) return '';
+  const src = linkSource(url);
+  return '<a class="' + (big ? 'btn btn-tinted' : 'link-chip') + '" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(url) + '">' +
+    icon('link') + '<span>' + esc(big ? t('link.open', { src: src }) : src) + '</span></a>';
+}
+
 /** Halaman yang tetap bisa diubah pembimbing (tanpa kapsul "Hanya baca"). */
 const SUPERVISOR_WRITABLE = ['masukan', 'masukan/semua', 'akun', 'lainnya'];
 let currentKey = 'ringkasan';
@@ -639,7 +668,7 @@ function chapterRow(ch) {
   const target = ch.target_date ? t('ch.targetRel', { date: fmtDate(ch.target_date), rel: relDays(ch.target_date) }) : t('ch.noTarget');
   return '<a class="row ch-row" href="#/bab/' + ch.id + '"><span class="title t-head">' + esc(chapterLabel(ch)) + '</span>' + bar(p.pct) +
     '<span class="lines"><span class="t-foot muted">' + esc(t('ch.finalCount', { n: p.final, total: p.total })) + '</span><span class="t-foot muted">' + esc(target) + '</span>' +
-    (fb ? cap(t('ch.openFb', { n: fb }), 'var(--red)') : '') + '</span></a>';
+    (fb ? cap(t('ch.openFb', { n: fb }), 'var(--red)') : '') + (safeUrl(ch.link) ? cap(linkSource(ch.link), 'var(--tint)') : '') + '</span></a>';
 }
 function vBab() {
   const chs = rows('chapters');
@@ -658,10 +687,14 @@ function sectionRow(s, withChapter) {
   if (withChapter) meta.push(esc(chapterLabel(byId('chapters', s.chapter_id))));
   if (s.due_date) meta.push('<span style="' + (late ? 'color:var(--red)' : '') + '">' + esc(t('sec.due', { date: fmtDate(s.due_date), rel: relDays(s.due_date) })) + '</span>');
   if (s.words) meta.push(esc(t('sec.words', { n: fmtNum(s.words) })));
-  const body = '<span class="grow"><span class="title">' + esc(sectionLabel(s)) + '</span>' + (meta.length ? '<span class="meta small">' + meta.join('<br>') + '</span>' : '') + '</span>' + stageCap(s.stage);
-  return isOwner()
-    ? '<button class="row" data-act="edit-section" data-id="' + s.id + '">' + body + icon('chevron', 'chev') + '</button>'
-    : '<div class="row">' + body + '</div>';
+  if (s.desc) meta.push('<span class="clamp-2">' + esc(s.desc) + '</span>');
+  const url = safeUrl(s.link);
+  const body = '<span class="grow"><span class="title">' + esc(sectionLabel(s)) + '</span>' + (meta.length ? '<span class="meta small">' + meta.join('<br>') + '</span>' : '') + '</span>';
+  const linkBtn = url ? '<a class="icon-btn link-icon" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + esc(t('link.open', { src: linkSource(url) })) + '" title="' + esc(linkSource(url)) + '">' + icon('link') + '</a>' : '';
+  // Baris dibungkus div agar tautan tidak bersarang di dalam tombol
+  return '<div class="row sec-row">' + (isOwner()
+    ? '<button class="row-main" data-act="edit-section" data-id="' + s.id + '">' + body + stageCap(s.stage) + '</button>'
+    : '<div class="row-main">' + body + stageCap(s.stage) + '</div>') + linkBtn + (isOwner() ? icon('chevron', 'chev') : '') + '</div>';
 }
 function feedbackRow(f, withChapter) {
   const lines = [];
@@ -680,9 +713,12 @@ function vBabDetail(params) {
   const target = ch.target_date ? fmtDate(ch.target_date) + ', ' + relDays(ch.target_date) : t('ch.notSet');
   const head = '<a class="btn btn-plain" href="#/penulisan" style="margin-left:-6px">' + icon('back') + esc(t('nav.penulisan')) + '</a>' +
     '<header class="page-head"><div><div style="margin-bottom:6px">' + cap(docLabel(ch.doc), DOCS[ch.doc] || 'var(--gray)') + '</div><h1 class="t-1">' + esc(chapterLabel(ch)) + '</h1></div></header>' +
+    (ch.desc ? '<p class="t-callout ch-desc">' + esc(ch.desc) + '</p>' : '') +
+    (safeUrl(ch.link) ? '<div style="margin:0 0 16px">' + linkChip(ch.link, true) + '</div>' : '') +
     '<div style="margin-bottom:8px">' + bar(p.pct) + '</div><p class="t-foot muted" style="margin:0 0 24px">' + esc(t('ch.finalCount', { n: p.final, total: p.total })) + '</p>';
-  const info = group('', '<div class="row"><span class="grow">' + esc(t('field.targetDate')) + '</span><span class="detail">' + esc(target) + '</span>' +
-    (isOwner() ? '<button class="btn btn-plain" data-act="edit-chapter" data-id="' + ch.id + '">' + esc(t('common.edit')) + '</button>' : '') + '</div>');
+  const info = group('', '<div class="row"><span class="grow">' + esc(t('field.targetDate')) + '</span><span class="detail">' + esc(target) + '</span></div>' +
+    '<div class="row"><span class="grow">' + esc(t('field.link')) + '</span><span class="detail">' + (safeUrl(ch.link) ? esc(linkSource(ch.link)) : esc(t('link.none'))) + '</span></div>',
+    isOwner() ? '<button class="btn btn-plain" data-act="edit-chapter" data-id="' + ch.id + '" style="padding:0">' + esc(t('ch.editDetails')) + '</button>' : '');
   const secList = secs.length ? group(t('ch.sections'), secs.map(s => sectionRow(s)).join(''), isOwner() ? esc(t('ch.sectionsHint')) : '') : '';
   const fbList = group(t('ch.feedback'), fbs.length ? fbs.map(f => feedbackRow(f)).join('') : '<div class="row muted t-sub">' + esc(t('ch.noFeedback')) + '</div>');
   const add = '<button class="btn btn-tinted" data-act="new-feedback" data-ch="' + ch.id + '" style="margin:-16px 0 28px">' + icon('plus') + esc(t('fb.add')) + '</button>';
@@ -697,6 +733,8 @@ function boardCard(s) {
     STAGES.map(v => '<option value="' + v + '"' + (v === Number(s.stage) ? ' selected' : '') + '>' + esc(stageLabel(v)) + '</option>').join('') + '</select>' : '';
   const seret = isOwner() ? ' data-drag="1"' : '';
   return '<div class="card" data-id="' + s.id + '" data-stage="' + Number(s.stage) + '"' + seret + '><div class="t-sub">' + esc(sectionLabel(s)) + '</div><div class="t-foot muted">' + esc(chapterLabel(ch)) + '</div>' +
+    (s.desc ? '<div class="t-foot muted clamp-2 card-desc">' + esc(s.desc) + '</div>' : '') +
+    (safeUrl(s.link) ? '<div class="card-link">' + linkChip(s.link) + '</div>' : '') +
     '<div class="row-b"><span class="t-foot" style="color:' + (late ? 'var(--red)' : 'var(--label-2)') + '">' + (s.due_date ? esc(fmtDate(s.due_date)) : '') + '</span>' + move + '</div></div>';
 }
 function vPapan() {
@@ -1084,17 +1122,29 @@ const UI = {
     openSheet({
       title: sectionLabel(s),
       body: fSelect('stage', t('field.stage'), STAGES.map(v => [v, stageLabel(v)]), s.stage) +
-        '<div class="form-grid">' + fDate('dueDate', t('field.dueDate'), s.due_date) + fText('words', t('field.words'), s.words === null ? '' : s.words, 'type="number" min="0" inputmode="numeric"') + '</div>',
-      onSubmit: async (v) => { replaceRow('sections', await api.call('section.update', { id: s.id, stage: Number(v.stage), dueDate: v.dueDate, words: v.words === '' ? '' : Number(v.words) })); }
+        '<div class="form-grid">' + fDate('dueDate', t('field.dueDate'), s.due_date) + fText('words', t('field.words'), s.words === null ? '' : s.words, 'type="number" min="0" inputmode="numeric"') + '</div>' +
+        fArea('desc', t('field.desc'), s.desc, 'rows="3" maxlength="1000" ' + ph('sec.descPh')) +
+        fText('link', t('field.link'), s.link, 'type="url" inputmode="url" maxlength="2000" autocomplete="off" ' + ph('link.placeholder')) +
+        '<p class="t-foot muted" style="margin:-6px 4px 14px">' + esc(t('link.hint')) + '</p>',
+      onSubmit: async (v) => {
+        if (v.link.trim() && !safeUrl(v.link)) throw new ApiError('VALIDATION', t('err.urlFormat', { field: t('field.link') }));
+        replaceRow('sections', await api.call('section.update', { id: s.id, stage: Number(v.stage), dueDate: v.dueDate, words: v.words === '' ? '' : Number(v.words), desc: v.desc, link: v.link.trim() }));
+      }
     });
   },
   'edit-chapter': (el) => {
     const c = byId('chapters', el.dataset.id);
     if (blockedOffline()) return;
     openSheet({
-      title: t('field.targetDate'),
-      body: '<p class="t-sub muted" style="margin:0 0 16px">' + esc(chapterLabel(c)) + '</p>' + fDate('targetDate', t('field.targetDate'), c.target_date),
-      onSubmit: async (v) => { replaceRow('chapters', await api.call('chapter.update', { id: c.id, targetDate: v.targetDate })); }
+      title: t('ch.editDetails'),
+      body: '<p class="t-sub muted" style="margin:0 0 16px">' + esc(chapterLabel(c)) + '</p>' + fDate('targetDate', t('field.targetDate'), c.target_date) +
+        fArea('desc', t('field.desc'), c.desc, 'rows="3" maxlength="1000" ' + ph('ch.descPh')) +
+        fText('link', t('field.link'), c.link, 'type="url" inputmode="url" maxlength="2000" autocomplete="off" ' + ph('link.placeholder')) +
+        '<p class="t-foot muted" style="margin:-6px 4px 14px">' + esc(t('link.hint')) + '</p>',
+      onSubmit: async (v) => {
+        if (v.link.trim() && !safeUrl(v.link)) throw new ApiError('VALIDATION', t('err.urlFormat', { field: t('field.link') }));
+        replaceRow('chapters', await api.call('chapter.update', { id: c.id, targetDate: v.targetDate, desc: v.desc, link: v.link.trim() }));
+      }
     });
   },
   'edit-milestone': (el) => {
