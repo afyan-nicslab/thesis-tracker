@@ -1,6 +1,6 @@
 # AGENTS — Aturan kerja untuk asisten AI di repo ini
 
-**Status:** v1.3, 27 Oktober 2026
+**Status:** v1.4, 27 Oktober 2026
 
 File ini dibaca oleh asisten AI (Claude, Codex, dan sejenisnya) sebelum menyentuh kode di repo ini. Isinya: apa proyek ini, bagaimana cara bekerja dengan pemiliknya, dan aturan yang tidak boleh dilanggar.
 
@@ -95,6 +95,8 @@ Sebelum menyatakan sebuah langkah selesai, pastikan:
 | Isi tracker | Ubah langsung di Google Sheet; muat ulang aplikasi |
 
 ## 7. Rencana pembangunan
+
+**Status 27 Okt 2026: semua tahap 1–12 selesai.** Pekerjaan berikutnya adalah pemeliharaan dan fitur baru; setiap perubahan tetap dimulai dari pembaruan dokumen di `docs/`, lalu mengikuti bagian 5 (definisi selesai) dan bagian 6 (cara menerbitkan).
 
 Dikerjakan berurutan. Setiap tahap dipecah lagi menjadi langkah kecil saat dikerjakan. Atas keputusan pemilik (27 Okt 2026), Tahap 4–10 dibangun sebagai satu paket; pengujiannya tetap mengikuti kolom "Selesai bila" per tahap.
 

@@ -1,6 +1,6 @@
 # PRD — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.6, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v2.0 (rilis selesai), 27 Oktober 2026
 **v1 (lama):** https://afyancho.github.io/thesis-tracker/ · **v2:** dibangun dari nol di repo GitHub baru (alamat menyusul)
 
 ---
@@ -135,7 +135,7 @@ v2 dibangun dari nol (K8), jadi tidak ada pemindahan struktur atau kode dari v1.
 - Status task v1 (id 1–3 selesai) ditandai manual pada task baru yang setara, karena daftar task ikut direvisi.
 - Linimasa, prompt, dan task disusun ulang sesuai temuan validasi 17 Okt 2026, bukan disalin apa adanya.
 
-Setelah v2 dipakai, deployment Apps Script v1 dimatikan dan `PIN_RAHASIA` dihapus. Langkah ini penting karena alamat API v1 tetap tercantum di repo lama dan masih bisa dipakai membaca data v1.
+**Selesai 27 Okt 2026:** deployment Apps Script v1 diarsipkan, `PIN_RAHASIA` dihapus, situs v1 dialihkan ke alamat v2, dan repo lama diarsipkan. Sheet v1 disimpan sebagai arsip pribadi (Restricted). Langkah ini penting karena alamat API v1 tetap tercantum di repo lama dan masih bisa dipakai membaca data v1.
 
 ## 8. Keputusan terbuka
 

@@ -1,6 +1,6 @@
 # ARCHITECTURE — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.8, 27 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v1.0, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v1.0 · DESIGN-SYSTEM.md v0.2 · AGENTS.md
 
 ---
@@ -252,10 +252,12 @@ GitHub Pages disajikan dari branch `main`, folder akar (`/`).
 | `PIN_PEPPER` hilang (mis. proyek Apps Script terhapus) | Tidak ada yang bisa masuk | Tidak perlu cadangan: jalankan `initPepper()` di proyek baru, lalu reset PIN pemilik lewat editor dan PIN pembimbing lewat Kelola Akses |
 | Pemilik lupa PIN | Tidak bisa masuk | Fungsi `resetOwnerPin()` yang hanya bisa dijalankan dari editor Apps Script |
 
-## 9. Peralihan dari v1
+## 9. Peralihan dari v1 (selesai 27 Okt 2026)
 
-v1 (repo, Sheet, dan Apps Script lama) tidak diubah selama v2 dibangun.
-
-1. Isi yang dibawa ke Sheet v2: 20 bacaan dan statusnya, serta status task 1–3 yang dipetakan manual (PRD bagian 7).
-2. Setelah semua kriteria penerimaan PRD lulus dan v2 dipakai: matikan deployment Apps Script v1 (Kelola deployment → Arsipkan) dan hapus `PIN_RAHASIA`. Alamat API v1 tercantum di repo lama, jadi tanpa langkah ini data v1 tetap bisa dibaca siapa pun.
-3. Repo lama diarsipkan (Settings → Archive this repository) atau README-nya diberi tautan ke alamat baru.
+| Langkah | Status |
+| --- | --- |
+| Isi yang dibawa ke Sheet v2 (20 bacaan, status task 1–3) | Selesai |
+| Uji akhir peran pembimbing di server sungguhan (akun percobaan, lalu dinonaktifkan) | Selesai |
+| Deployment Apps Script v1 diarsipkan; `PIN_RAHASIA` dihapus; alamat API v1 tidak lagi mengembalikan data | Selesai |
+| `afyancho.github.io/thesis-tracker/` dialihkan ke `afyan-nicslab.github.io/thesis-tracker/`; repo lama diarsipkan | Selesai |
+| Sheet v1 "Thesis Tracker DB" | Disimpan sebagai arsip pribadi (Restricted). Boleh dihapus bersama proyek Apps Script v1 bila tidak dibutuhkan lagi |
