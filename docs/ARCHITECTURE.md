@@ -1,6 +1,6 @@
 # ARCHITECTURE — Thesis Tracker v2
 
-**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.2, 26 Oktober 2026
+**Pemilik:** Afyan Cholil Asy'ari · **Status:** v0.4, 27 Oktober 2026
 **Dokumen terkait:** PRD.md v1.0 · DESIGN-SYSTEM.md v0.2 · AGENTS.md
 
 ---
@@ -66,10 +66,11 @@ Tiga bagian yang sama jenisnya dengan v1, tetapi semuanya dibangun baru dari nol
 
 ### 4.1 PIN
 
-- Saat akun dibuat atau PIN diganti: `salt = Utilities.getUuid()`, lalu `pin_hash = base64(HMAC-SHA256(key = PIN_PEPPER, pesan = salt + ":" + pin))` dengan `Utilities.computeHmacSha256Signature`.
+- Saat akun dibuat atau PIN diganti: `salt = Utilities.getUuid()`, lalu `pin_hash = hex(HMAC-SHA256(key = PIN_PEPPER, pesan = salt + ":" + pin))` dengan `Utilities.computeHmacSha256Signature`. Hex dipakai, bukan base64, karena base64 bisa diawali `+` yang dianggap rumus oleh Sheets.
+- Akun pemilik dibuat dan PIN-nya di-reset lewat menu "Thesis Tracker" di Google Sheet (`menuCreateOwner`, `menuResetOwnerPin`), yang hanya terlihat oleh pemilik akun Google.
 - Saat masuk: hitung ulang dengan salt pengguna, bandingkan dengan perbandingan waktu-konstan (loop seluruh karakter, bukan `===`).
 - PIN minimal 6 digit; tolak urutan (123456, 654321) dan angka berulang (111111).
-- `PIN_PEPPER`: teks acak minimal 32 karakter, hanya di Script Properties. Bila hilang atau diganti, semua PIN harus di-reset.
+- `PIN_PEPPER`: 96 karakter acak yang dibuat oleh fungsi editor `initPepper()` langsung di Script Properties, tanpa pernah ditampilkan atau disalin. Bila hilang atau diganti, semua PIN harus di-reset.
 
 ### 4.2 Pembatasan percobaan
 
@@ -198,7 +199,7 @@ GitHub Pages disajikan dari branch `main`, folder akar (`/`).
 | Kuota harian Apps Script | Kecil untuk 3 pengguna | Tidak perlu tindakan; dicatat saja |
 | Token di `localStorage` bisa dicuri lewat XSS | Akun diambil alih | Semua output di-escape; tanpa library JS dari luar; masa token terbatas; tombol keluar mencabut token |
 | Sheet dibagikan tidak sengaja | Data dan email pembimbing terbuka | Sheet tetap Restricted; hash PIN tidak berguna tanpa `PIN_PEPPER` |
-| `PIN_PEPPER` hilang | Tidak ada yang bisa masuk | Simpan cadangan pepper di pengelola kata sandi pribadi; prosedur reset lewat editor Apps Script |
+| `PIN_PEPPER` hilang (mis. proyek Apps Script terhapus) | Tidak ada yang bisa masuk | Tidak perlu cadangan: jalankan `initPepper()` di proyek baru, lalu reset PIN pemilik lewat editor dan PIN pembimbing lewat Kelola Akses |
 | Pemilik lupa PIN | Tidak bisa masuk | Fungsi `resetOwnerPin()` yang hanya bisa dijalankan dari editor Apps Script |
 
 ## 9. Peralihan dari v1
